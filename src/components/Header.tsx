@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Users, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Header = () => {
   return (
@@ -26,9 +27,11 @@ export const Header = () => {
             <a href="#paquetes" className="text-sm font-medium hover:text-primary transition-colors">
               Paquetes
             </a>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Users className="w-4 h-4" />
-              Aliados
+            <Button variant="outline" size="sm" className="gap-2" asChild>
+              <Link to="/aliados">
+                <Users className="w-4 h-4" />
+                Aliados
+              </Link>
             </Button>
           </nav>
 
