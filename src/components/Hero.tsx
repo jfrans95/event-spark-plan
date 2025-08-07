@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ArrowRight, Sparkles, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/hero-events.jpg";
+import { EventDesigner } from "./EventDesigner";
 
 export const Hero = () => {
   return (
@@ -85,33 +85,9 @@ export const Hero = () => {
             </div>
           </div>
 
-          {/* Right Content - Quick Filter Card */}
+          {/* Right Content - Event Designer */}
           <div className="lg:justify-self-end w-full max-w-md">
-            <Card className="p-6 bg-background/95 backdrop-blur border-2 rounded-2xl shadow-xl">
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold">Inicio Rápido</h3>
-                <p className="text-sm text-muted-foreground">
-                  Completa estos datos para ver opciones personalizadas
-                </p>
-                
-                {/* Quick filters would go here - simplified for now */}
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    📍 Tipo de espacio
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    👥 Número de invitados
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    🎉 Tipo de evento
-                  </Button>
-                </div>
-                
-                <Button className="w-full mt-4">
-                  Ver Opciones
-                </Button>
-              </div>
-            </Card>
+            <EventDesigner />
           </div>
         </div>
       </div>
