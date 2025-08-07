@@ -27,12 +27,6 @@ export const Header = () => {
             <a href="#paquetes" className="text-sm font-medium hover:text-primary transition-colors">
               Paquetes
             </a>
-            <Button variant="outline" size="sm" className="gap-2" asChild>
-              <Link to="/aliados">
-                <Users className="w-4 h-4" />
-                Aliados
-              </Link>
-            </Button>
           </nav>
 
           {/* Auth Button */}
@@ -40,9 +34,11 @@ export const Header = () => {
             <Badge variant="secondary" className="hidden sm:flex">
               MVP v1.0
             </Badge>
-            <Button variant="outline" size="sm" className="gap-2">
-              <LogIn className="w-4 h-4" />
-              Ingresar
+            <Button variant="outline" size="sm" className="gap-2" asChild>
+              <Link to="/aliados">
+                <Users className="w-4 h-4" />
+                Aliados
+              </Link>
             </Button>
           </div>
         </div>
