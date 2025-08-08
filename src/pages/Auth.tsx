@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
+import ProviderApplicationForm from "@/components/ProviderApplicationForm";
 
 type UserRole = 'administrator' | 'collaborator' | 'provider';
 
@@ -18,6 +19,8 @@ const Auth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showProviderForm, setShowProviderForm] = useState(false);
+  const [pendingProviderUser, setPendingProviderUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   // Auth state management
@@ -29,7 +32,7 @@ const Auth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          navigate("/");
+          navigate("/dashboard");
           toast({
             title: "Bienvenido",
             description: "Has iniciado sesión correctamente",
@@ -44,7 +47,7 @@ const Auth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
 
@@ -125,11 +128,29 @@ const Auth = () => {
           });
         }
       } else {
-        toast({
-          title: "Registro exitoso",
-          description: "Revisa tu email para confirmar tu cuenta",
-        });
-        setAuthMode('signin');
+        if (role === 'provider') {
+          // For providers, we need to show the application form
+          toast({
+            title: "Registro exitoso",
+            description: "Ahora completa tu solicitud de alianza",
+          });
+          // We'll need to sign them in first to get the user ID
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (!signInError && signInData.user) {
+            setPendingProviderUser(signInData.user);
+            setShowProviderForm(true);
+          }
+        } else {
+          toast({
+            title: "Registro exitoso",
+            description: "Revisa tu email para confirmar tu cuenta",
+          });
+          setAuthMode('signin');
+        }
       }
     } catch (error) {
       toast({
@@ -141,6 +162,21 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // If showing provider form, render it instead
+  if (showProviderForm && pendingProviderUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+        <ProviderApplicationForm 
+          userId={pendingProviderUser.id}
+          onSuccess={() => {
+            setShowProviderForm(false);
+            setPendingProviderUser(null);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">

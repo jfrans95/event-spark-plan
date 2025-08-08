@@ -44,6 +44,98 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_applications: {
+        Row: {
+          admin_observations: string | null
+          company_name: string
+          contact_phone: string
+          created_at: string
+          evidence_photos: string[] | null
+          experience_description: string
+          id: string
+          nit: string
+          product_category: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specialization: string
+          status: string
+          updated_at: string
+          user_id: string
+          years_experience: number
+        }
+        Insert: {
+          admin_observations?: string | null
+          company_name: string
+          contact_phone: string
+          created_at?: string
+          evidence_photos?: string[] | null
+          experience_description: string
+          id?: string
+          nit: string
+          product_category: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialization: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          years_experience: number
+        }
+        Update: {
+          admin_observations?: string | null
+          company_name?: string
+          contact_phone?: string
+          created_at?: string
+          evidence_photos?: string[] | null
+          experience_description?: string
+          id?: string
+          nit?: string
+          product_category?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialization?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          years_experience?: number
+        }
+        Relationships: []
+      }
+      provider_profiles: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_profiles_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "provider_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
