@@ -128,29 +128,12 @@ const Auth = () => {
           });
         }
       } else {
-        if (role === 'provider') {
-          // For providers, we need to show the application form
-          toast({
-            title: "Registro exitoso",
-            description: "Ahora completa tu solicitud de alianza",
-          });
-          // We'll need to sign them in first to get the user ID
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          if (!signInError && signInData.user) {
-            setPendingProviderUser(signInData.user);
-            setShowProviderForm(true);
-          }
-        } else {
-          toast({
-            title: "Registro exitoso",
-            description: "Revisa tu email para confirmar tu cuenta",
-          });
-          setAuthMode('signin');
-        }
+        // No iniciar sesión automáticamente si la confirmación por email está activa.
+        toast({
+          title: "Registro enviado",
+          description: "Revisa tu correo para confirmar la cuenta y luego inicia sesión.",
+        });
+        setAuthMode('signin');
       }
     } catch (error) {
       toast({
