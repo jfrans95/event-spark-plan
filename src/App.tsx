@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Partners from "./pages/Partners";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import SeedAdmin from "./pages/SeedAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/aliados" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/seed-admin" element={<SeedAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
