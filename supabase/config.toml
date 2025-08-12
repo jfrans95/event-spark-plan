@@ -2,3 +2,10 @@ project_id = "uuioedhcwydmtoywyvtq"
 
 [functions.seed-admin]
 verify_jwt = false
+
+[functions.quotes-create]
+verify_jwt = false
+
+[functions.tracking-get]
+verify_jwt = false
+

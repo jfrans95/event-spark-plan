@@ -58,13 +58,18 @@ export const Hero = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg"
+                asChild
               >
-                Diseñar Evento
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <a href="/catalog" aria-label="Diseñar evento ahora">
+                  Diseñar Evento
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </a>
               </Button>
               
-              <Button variant="outline" size="lg">
-                Ver Paquetes Prediseñados
+              <Button variant="outline" size="lg" asChild>
+                <a href="/catalog?preset=prediseniados" aria-label="Ver paquetes prediseñados">
+                  Ver Paquetes Prediseñados
+                </a>
               </Button>
             </div>
 

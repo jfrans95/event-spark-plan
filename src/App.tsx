@@ -8,7 +8,10 @@ import Partners from "./pages/Partners";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SeedAdmin from "./pages/SeedAdmin";
+import Catalog from "./pages/Catalog";
+import Track from "./pages/Track";
 import NotFound from "./pages/NotFound";
+import { PackageProvider } from "@/context/PackageContext";
 
 const queryClient = new QueryClient();
 
@@ -17,16 +20,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/aliados" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/seed-admin" element={<SeedAdmin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <PackageProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/aliados" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/seed-admin" element={<SeedAdmin />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/track/:code" element={<Track />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </PackageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
