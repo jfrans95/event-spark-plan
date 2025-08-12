@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface EventDesignerData {
   spaceType: string;
@@ -59,7 +60,8 @@ export const EventDesigner = () => {
     }
   ];
 
-  const plans = ["Básico", "Pro", "Premium"];
+const plans = ["Básico", "Pro", "Premium"];
+  const navigate = useNavigate();
 
   const toggleFilter = (filterName: string) => {
     setActiveFilter(activeFilter === filterName ? null : filterName);
@@ -268,8 +270,13 @@ export const EventDesigner = () => {
           className="w-full mt-4" 
           disabled={!isFormComplete()}
           onClick={() => {
-            console.log("Datos del evento:", formData);
-            // TODO: Navegar al siguiente paso o mostrar resultados
+            const params = new URLSearchParams({
+              space: formData.spaceType,
+              event: formData.eventType,
+              plan: formData.plan.toLowerCase(),
+              guests: String(formData.guestCount),
+            });
+            navigate(`/catalog?${params.toString()}`);
           }}
         >
           Diseñar Mi Evento

@@ -1,8 +1,50 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MessageCircle, Phone, Mail, Heart, MapPin, Clock } from "lucide-react";
+import { MessageCircle, Phone, Mail, Heart, MapPin, Clock, Send } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export const Footer = () => {
+  const [open, setOpen] = useState(false);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [reason, setReason] = useState("");
+  const [sending, setSending] = useState(false);
+  const [track, setTrack] = useState("");
+  const navigate = useNavigate();
+
+  const submitChat = async () => {
+    if (!whatsapp || !reason) {
+      toast({ title: "Datos incompletos", description: "Ingresa WhatsApp y motivo", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("inbox-create", {
+        body: { whatsapp, reason },
+      });
+      if (error) throw error;
+      toast({ title: "Mensaje enviado", description: "Un asesor te contactará pronto" });
+      setOpen(false);
+      setWhatsapp("");
+      setReason("");
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "No se pudo enviar", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const goTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (track.trim()) navigate(`/track/${encodeURIComponent(track.trim())}`);
+  };
+
   return (
     <footer className="bg-background border-t py-16">
       <div className="container mx-auto px-4">
@@ -21,15 +63,31 @@ export const Footer = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Button size="lg" className="gap-2">
+                <Button size="lg" className="gap-2" onClick={() => setOpen(true)}>
                   <MessageCircle className="w-5 h-5" />
                   Chat con Asesor
                 </Button>
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Phone className="w-5 h-5" />
-                  Llamar Ahora
+                <Button variant="outline" size="lg" className="gap-2" asChild>
+                  <a href="tel:+5712345678">
+                    <Phone className="w-5 h-5" />
+                    Llamar Ahora
+                  </a>
                 </Button>
               </div>
+
+              {/* Tracking quick form */}
+              <form onSubmit={goTrack} className="mx-auto max-w-md pt-6 flex gap-2">
+                <Input
+                  value={track}
+                  onChange={(e) => setTrack(e.target.value)}
+                  placeholder="Ingresa tu código de seguimiento"
+                  aria-label="Código de seguimiento"
+                />
+                <Button type="submit" className="gap-2">
+                  <Send className="w-4 h-4" />
+                  Ver tracking
+                </Button>
+              </form>
             </div>
           </Card>
         </div>
@@ -111,6 +169,28 @@ export const Footer = () => {
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chatea con un asesor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="wa">WhatsApp</Label>
+              <Input id="wa" placeholder="Ej: +57 300 123 4567" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="motivo">Motivo</Label>
+              <Textarea id="motivo" placeholder="Cuéntanos brevemente..." value={reason} onChange={(e) => setReason(e.target.value)} />
+            </div>
+            <Button className="w-full" onClick={submitChat} disabled={sending}>
+              {sending ? "Enviando…" : "Enviar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </footer>
   );
 };

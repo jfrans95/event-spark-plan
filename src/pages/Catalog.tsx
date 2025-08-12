@@ -7,6 +7,7 @@ import { usePackage, Product, Category } from "@/context/PackageContext";
 import ProductCard from "@/components/catalog/ProductCard";
 import PackageSidebar from "@/components/catalog/PackageSidebar";
 import QuoteModal from "@/components/catalog/QuoteModal";
+import FilterBar from "@/components/catalog/FilterBar";
 
 const CATEGORIES: Category[] = [
   "Montaje técnico",
@@ -48,6 +49,7 @@ const Catalog = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
+          <FilterBar />
           <Card>
             <CardHeader>
               <CardTitle>Catálogo</CardTitle>

@@ -9,3 +9,7 @@ verify_jwt = false
 [functions.tracking-get]
 verify_jwt = false
 
+[functions.inbox-create]
+verify_jwt = false
+
+
