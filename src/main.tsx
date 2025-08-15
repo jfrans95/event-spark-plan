@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { AppRouter } from './app/AppRouter.tsx'
+import App from './App.tsx'
 import './index.css'
 
-createRoot(document.getElementById("root")!).render(<AppRouter />);
+createRoot(document.getElementById("root")!).render(<App />);

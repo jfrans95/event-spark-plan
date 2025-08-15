@@ -1,5 +1,4 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface PaqueteItem {
   id: string;
@@ -9,7 +8,7 @@ export interface PaqueteItem {
   cantidad: number;
 }
 
-interface PaqueteStore {
+interface PaqueteContextType {
   items: PaqueteItem[];
   addItem: (item: Omit<PaqueteItem, 'cantidad'>) => void;
   removeItem: (id: string) => void;
@@ -18,46 +17,72 @@ interface PaqueteStore {
   getTotal: () => number;
 }
 
-export const usePaqueteStore = create<PaqueteStore>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      addItem: (item) => 
-        set((state) => {
-          const existingItem = state.items.find(i => i.id === item.id);
-          if (existingItem) {
-            return {
-              items: state.items.map(i => 
-                i.id === item.id 
-                  ? { ...i, cantidad: i.cantidad + 1 }
-                  : i
-              )
-            };
-          }
-          return {
-            items: [...state.items, { ...item, cantidad: 1 }]
-          };
-        }),
-      removeItem: (id) =>
-        set((state) => ({
-          items: state.items.filter(item => item.id !== id)
-        })),
-      updateQuantity: (id, cantidad) =>
-        set((state) => ({
-          items: cantidad === 0 
-            ? state.items.filter(item => item.id !== id)
-            : state.items.map(item => 
-                item.id === id ? { ...item, cantidad } : item
-              )
-        })),
-      clearPackage: () => set({ items: [] }),
-      getTotal: () => {
-        const { items } = get();
-        return items.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+const PaqueteContext = createContext<PaqueteContextType | undefined>(undefined);
+
+export const PaqueteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [items, setItems] = useState<PaqueteItem[]>(() => {
+    const saved = localStorage.getItem('event-package-storage');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('event-package-storage', JSON.stringify(items));
+  }, [items]);
+
+  const addItem = (item: Omit<PaqueteItem, 'cantidad'>) => {
+    setItems(prev => {
+      const existingItem = prev.find(i => i.id === item.id);
+      if (existingItem) {
+        return prev.map(i => 
+          i.id === item.id 
+            ? { ...i, cantidad: i.cantidad + 1 }
+            : i
+        );
       }
-    }),
-    {
-      name: 'event-package-storage'
-    }
-  )
-);
+      return [...prev, { ...item, cantidad: 1 }];
+    });
+  };
+
+  const removeItem = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: string, cantidad: number) => {
+    setItems(prev => 
+      cantidad === 0 
+        ? prev.filter(item => item.id !== id)
+        : prev.map(item => 
+            item.id === id ? { ...item, cantidad } : item
+          )
+    );
+  };
+
+  const clearPackage = () => {
+    setItems([]);
+  };
+
+  const getTotal = () => {
+    return items.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+  };
+
+  return (
+    <PaqueteContext.Provider value={{ 
+      items, 
+      addItem, 
+      removeItem, 
+      updateQuantity, 
+      clearPackage, 
+      getTotal 
+    }}>
+      {children}
+    </PaqueteContext.Provider>
+  );
+};
+
+export const usePaqueteStore = () => {
+  const context = useContext(PaqueteContext);
+  if (context === undefined) {
+    throw new Error('usePaqueteStore must be used within a PaqueteProvider');
+  }
+  return context;
+};

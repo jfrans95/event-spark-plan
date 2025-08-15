@@ -12,6 +12,8 @@ import Catalog from "./pages/Catalog";
 import Track from "./pages/Track";
 import NotFound from "./pages/NotFound";
 import { PackageProvider } from "@/context/PackageContext";
+import { FiltrosProvider } from "@/stores/filtrosStore";
+import { PaqueteProvider } from "@/stores/paqueteStore";
 
 const queryClient = new QueryClient();
 
@@ -20,10 +22,16 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <PackageProvider>
+      <FiltrosProvider>
+        <PaqueteProvider>
+          <PackageProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/catalogo" element={<Catalog />} />
+            <Route path="/paquete" element={<Dashboard />} />
+            <Route path="/cotizacion" element={<Dashboard />} />
+            <Route path="/seguimiento" element={<Track />} />
             <Route path="/aliados" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/seed-admin" element={<SeedAdmin />} />
@@ -33,7 +41,9 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </PackageProvider>
+        </PackageProvider>
+        </PaqueteProvider>
+      </FiltrosProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

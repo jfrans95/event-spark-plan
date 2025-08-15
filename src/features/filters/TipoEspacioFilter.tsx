@@ -19,7 +19,7 @@ export const TipoEspacioFilter = () => {
         <MapPin className="h-4 w-4" />
         Tipo de Espacio
       </label>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {ESPACIOS.map((espacio) => (
           <Button
             key={espacio.id}
