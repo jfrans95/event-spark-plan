@@ -9,7 +9,7 @@ export interface EventFilters {
 
 interface FiltrosContextType {
   filters: EventFilters;
-  setFilter: <K extends keyof EventFilters>(key: K, value: EventFilters[K]) => void;
+  setFilter: (key: keyof EventFilters, value: any) => void;
   setFilters: (filters: Partial<EventFilters>) => void;
   resetFilters: () => void;
 }
@@ -23,17 +23,22 @@ const defaultFilters: EventFilters = {
 
 const FiltrosContext = createContext<FiltrosContextType | undefined>(undefined);
 
-export const FiltrosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function FiltrosProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFiltersState] = useState<EventFilters>(() => {
-    const saved = localStorage.getItem('event-filters-storage');
-    return saved ? JSON.parse(saved) : defaultFilters;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('event-filters-storage');
+      return saved ? JSON.parse(saved) : defaultFilters;
+    }
+    return defaultFilters;
   });
 
   useEffect(() => {
-    localStorage.setItem('event-filters-storage', JSON.stringify(filters));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('event-filters-storage', JSON.stringify(filters));
+    }
   }, [filters]);
 
-  const setFilter = <K extends keyof EventFilters>(key: K, value: EventFilters[K]) => {
+  const setFilter = (key: keyof EventFilters, value: any) => {
     setFiltersState(prev => ({ ...prev, [key]: value }));
   };
 
@@ -45,12 +50,12 @@ export const FiltrosProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setFiltersState(defaultFilters);
   };
 
-  return (
-    <FiltrosContext.Provider value={{ filters, setFilter, setFilters, resetFilters }}>
-      {children}
-    </FiltrosContext.Provider>
+  return React.createElement(
+    FiltrosContext.Provider,
+    { value: { filters, setFilter, setFilters, resetFilters } },
+    children
   );
-};
+}
 
 export const useFiltrosStore = () => {
   const context = useContext(FiltrosContext);

@@ -19,14 +19,19 @@ interface PaqueteContextType {
 
 const PaqueteContext = createContext<PaqueteContextType | undefined>(undefined);
 
-export const PaqueteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function PaqueteProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<PaqueteItem[]>(() => {
-    const saved = localStorage.getItem('event-package-storage');
-    return saved ? JSON.parse(saved) : [];
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('event-package-storage');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
   });
 
   useEffect(() => {
-    localStorage.setItem('event-package-storage', JSON.stringify(items));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('event-package-storage', JSON.stringify(items));
+    }
   }, [items]);
 
   const addItem = (item: Omit<PaqueteItem, 'cantidad'>) => {
@@ -65,19 +70,21 @@ export const PaqueteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return items.reduce((total, item) => total + (item.precio * item.cantidad), 0);
   };
 
-  return (
-    <PaqueteContext.Provider value={{ 
-      items, 
-      addItem, 
-      removeItem, 
-      updateQuantity, 
-      clearPackage, 
-      getTotal 
-    }}>
-      {children}
-    </PaqueteContext.Provider>
+  const contextValue = {
+    items, 
+    addItem, 
+    removeItem, 
+    updateQuantity, 
+    clearPackage, 
+    getTotal 
+  };
+
+  return React.createElement(
+    PaqueteContext.Provider,
+    { value: contextValue },
+    children
   );
-};
+}
 
 export const usePaqueteStore = () => {
   const context = useContext(PaqueteContext);
