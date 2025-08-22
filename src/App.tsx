@@ -2,16 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Partners from "./pages/Partners";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import SeedAdmin from "./pages/SeedAdmin";
-import Catalog from "./pages/Catalog";
-import Track from "./pages/Track";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter } from "react-router-dom";
 import { PackageProvider } from "@/context/PackageContext";
+import { AppRouter } from "@/app/AppRouter";
 
 const queryClient = new QueryClient();
 
@@ -22,16 +15,7 @@ const App = () => (
       <Sonner />
       <PackageProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/aliados" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/seed-admin" element={<SeedAdmin />} />
-            <Route path="/catalog" element={<Catalog />} />
-            <Route path="/track/:code" element={<Track />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRouter />
         </BrowserRouter>
       </PackageProvider>
     </TooltipProvider>
