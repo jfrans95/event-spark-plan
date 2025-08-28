@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      products: {
+        Row: {
+          capacity_max: number
+          capacity_min: number
+          created_at: string
+          description: string | null
+          event_types: Database["public"]["Enums"]["event_type"][] | null
+          id: string
+          images: string[] | null
+          name: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          price: number
+          provider_id: string
+          space_types: Database["public"]["Enums"]["space_type"][] | null
+          updated_at: string
+        }
+        Insert: {
+          capacity_max?: number
+          capacity_min?: number
+          created_at?: string
+          description?: string | null
+          event_types?: Database["public"]["Enums"]["event_type"][] | null
+          id?: string
+          images?: string[] | null
+          name: string
+          plan?: Database["public"]["Enums"]["plan_type"]
+          price: number
+          provider_id: string
+          space_types?: Database["public"]["Enums"]["space_type"][] | null
+          updated_at?: string
+        }
+        Update: {
+          capacity_max?: number
+          capacity_min?: number
+          created_at?: string
+          description?: string | null
+          event_types?: Database["public"]["Enums"]["event_type"][] | null
+          id?: string
+          images?: string[] | null
+          name?: string
+          plan?: Database["public"]["Enums"]["plan_type"]
+          price?: number
+          provider_id?: string
+          space_types?: Database["public"]["Enums"]["space_type"][] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_products_provider"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -150,6 +206,49 @@ export type Database = {
         | "provider"
         | "admin"
         | "advisor"
+      event_type:
+        | "celebraciones_internas"
+        | "activaciones_marca"
+        | "team_building"
+        | "cierre_ano"
+        | "cumpleanos"
+        | "dia_madre_padre"
+        | "fechas_religiosas"
+        | "graduaciones"
+        | "reuniones_especiales"
+        | "eventos_pequenos"
+        | "eventos_medios"
+        | "eventos_institucionales"
+        | "encuentros_publicos"
+        | "lanzamientos_aniversarios"
+      plan_type: "basico" | "pro" | "premium"
+      space_type:
+        | "parques_publicos"
+        | "jardines_botanicos"
+        | "miradores_naturales"
+        | "playas"
+        | "plazoletas"
+        | "calles_barrios"
+        | "salones_eventos"
+        | "teatros"
+        | "auditorios"
+        | "centros_convenciones"
+        | "discotecas"
+        | "restaurantes_privados"
+        | "iglesias_templos"
+        | "galerias_museos"
+        | "bodegas"
+        | "casas_patrimoniales"
+        | "rooftops"
+        | "locales_en_desuso"
+        | "estudios"
+        | "fincas_privadas"
+        | "casas_familiares"
+        | "unidades_residenciales"
+        | "casas_patio_jardin"
+        | "viviendas_adecuadas"
+        | "carpas"
+        | "contenedores"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -283,6 +382,51 @@ export const Constants = {
         "provider",
         "admin",
         "advisor",
+      ],
+      event_type: [
+        "celebraciones_internas",
+        "activaciones_marca",
+        "team_building",
+        "cierre_ano",
+        "cumpleanos",
+        "dia_madre_padre",
+        "fechas_religiosas",
+        "graduaciones",
+        "reuniones_especiales",
+        "eventos_pequenos",
+        "eventos_medios",
+        "eventos_institucionales",
+        "encuentros_publicos",
+        "lanzamientos_aniversarios",
+      ],
+      plan_type: ["basico", "pro", "premium"],
+      space_type: [
+        "parques_publicos",
+        "jardines_botanicos",
+        "miradores_naturales",
+        "playas",
+        "plazoletas",
+        "calles_barrios",
+        "salones_eventos",
+        "teatros",
+        "auditorios",
+        "centros_convenciones",
+        "discotecas",
+        "restaurantes_privados",
+        "iglesias_templos",
+        "galerias_museos",
+        "bodegas",
+        "casas_patrimoniales",
+        "rooftops",
+        "locales_en_desuso",
+        "estudios",
+        "fincas_privadas",
+        "casas_familiares",
+        "unidades_residenciales",
+        "casas_patio_jardin",
+        "viviendas_adecuadas",
+        "carpas",
+        "contenedores",
       ],
     },
   },
