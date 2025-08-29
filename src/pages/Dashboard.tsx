@@ -48,6 +48,21 @@ const Dashboard = () => {
       }
 
       setUserRole(profile.role);
+      
+      // Redirect to appropriate dashboard if not already there
+      const roleRoutes = {
+        administrator: '/dashboard/admin',
+        advisor: '/dashboard/asesor', 
+        collaborator: '/dashboard/colaborador',
+        provider: '/dashboard/proveedor'
+      };
+      
+      const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes];
+      const currentPath = window.location.pathname;
+      
+      if (targetRoute && currentPath === '/dashboard') {
+        navigate(targetRoute, { replace: true });
+      }
     } catch (error) {
       console.error('Error checking user:', error);
       navigate("/aliados");

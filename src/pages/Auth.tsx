@@ -27,39 +27,15 @@ const Auth = () => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Verificar si es un proveedor que necesita completar su aplicación
-          if (session.user.user_metadata?.role === 'provider') {
-            // Verificar si ya tiene una aplicación aprobada
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            if (profile?.role === 'provider') {
-              // Ya es proveedor aprobado, ir al dashboard
-              navigate("/dashboard");
-              toast({
-                title: "Bienvenido",
-                description: "Has iniciado sesión correctamente",
-              });
-            } else {
-              // Necesita completar la aplicación de proveedor
-              setPendingProviderUser(session.user);
-              setShowProviderForm(true);
-            }
-          } else {
-            navigate("/dashboard");
-            toast({
-              title: "Bienvenido",
-              description: "Has iniciado sesión correctamente",
-            });
-          }
+          // Usar setTimeout para evitar el loop de auth
+          setTimeout(async () => {
+            await handleUserRedirection(session.user);
+          }, 0);
         }
       }
     );
@@ -70,29 +46,55 @@ const Auth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Trigger the same logic as the auth state change
-        if (session.user.user_metadata?.role === 'provider') {
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single()
-            .then(({ data: profile }) => {
-              if (profile?.role === 'provider') {
-                navigate("/dashboard");
-              } else {
-                setPendingProviderUser(session.user);
-                setShowProviderForm(true);
-              }
-            });
-        } else {
-          navigate("/dashboard");
-        }
+        handleUserRedirection(session.user);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Helper function to handle user redirection based on role
+  const handleUserRedirection = async (user: any) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile?.role) {
+        // Redirect to appropriate dashboard based on role
+        const roleRoutes = {
+          administrator: '/dashboard/admin',
+          advisor: '/dashboard/asesor',
+          collaborator: '/dashboard/colaborador',
+          provider: '/dashboard/proveedor'
+        };
+        
+        const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes] || '/dashboard';
+        navigate(targetRoute);
+        
+        toast({
+          title: "Bienvenido",
+          description: "Has iniciado sesión correctamente",
+        });
+      } else if (user.user_metadata?.role === 'provider') {
+        // Usuario registrado como proveedor pero sin perfil aprobado
+        setPendingProviderUser(user);
+        setShowProviderForm(true);
+      } else {
+        // Fallback to general dashboard
+        navigate("/dashboard");
+        toast({
+          title: "Bienvenido",
+          description: "Has iniciado sesión correctamente",
+        });
+      }
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+      navigate("/dashboard");
+    }
+  };
 
   const handleSignIn = async (formData: FormData) => {
     setLoading(true);
