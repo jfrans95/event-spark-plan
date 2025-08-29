@@ -73,7 +73,7 @@ const ProviderRegistration = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">EventCraft</h1>
-              <p className="text-sm text-muted-foreground">Registro de Proveedor</p>
+              <p className="text-sm text-muted-foreground">Alianza de Proveedor</p>
             </div>
           </div>
           <Button variant="outline" onClick={() => navigate('/')}>
@@ -85,7 +85,7 @@ const ProviderRegistration = () => {
         {/* Registration Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Solicitud de Registro como Proveedor</CardTitle>
+            <CardTitle>Solicitud de Alianza como Proveedor</CardTitle>
           </CardHeader>
           <CardContent>
             <ProviderApplicationForm 

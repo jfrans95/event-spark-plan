@@ -81,7 +81,7 @@ const AdminDashboard = () => {
         <TabsList>
           <TabsTrigger value="events">Eventos en Ejecución</TabsTrigger>
           <TabsTrigger value="quotes">Nuevas Solicitudes</TabsTrigger>
-          <TabsTrigger value="providers">Solicitudes Proveedores</TabsTrigger>
+          <TabsTrigger value="providers">Solicitudes Alianzas</TabsTrigger>
           <TabsTrigger value="analytics">Análisis y Reportes</TabsTrigger>
         </TabsList>
         

@@ -164,7 +164,7 @@ const ProviderApplicationsList = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Solicitudes de Proveedores</CardTitle>
+        <CardTitle>Solicitudes de Alianza - Proveedores</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -215,7 +215,7 @@ const ProviderApplicationsList = () => {
                       <DialogHeader>
                         <DialogTitle>{application.company_name}</DialogTitle>
                         <DialogDescription>
-                          Solicitud de registro como proveedor
+                          Solicitud de alianza como proveedor
                         </DialogDescription>
                       </DialogHeader>
                       {selectedApplication && (
