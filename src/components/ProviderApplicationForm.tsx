@@ -28,6 +28,19 @@ const productCategories = [
 const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormProps) => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [formData, setFormData] = useState({
+    contactName: '',
+    contactLastName: '',
+    companyName: '',
+    nit: '',
+    contactPhone: '',
+    contactEmail: '',
+    socialNetworks: '',
+    productCategory: '',
+    yearsExperience: '',
+    experienceDescription: '',
+    specialization: ''
+  });
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -67,7 +80,8 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         years_experience: parseInt(formData.get('yearsExperience') as string),
         experience_description: formData.get('experienceDescription') as string,
         specialization: formData.get('specialization') as string,
-        evidence_photos: evidencePhotos
+        evidence_photos: evidencePhotos,
+        status: 'pending'
       };
 
       const { error } = await supabase
@@ -79,13 +93,11 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
       }
 
       toast({
-        title: "¡Bienvenido a EventCraft!",
-        description: "Tu solicitud ha sido aprobada automáticamente. Ya puedes agregar tus productos.",
+        title: "Solicitud enviada correctamente",
+        description: "Tu solicitud ha sido enviada al administrador. Te notificaremos cuando sea revisada.",
       });
 
       onSuccess();
-      // Redirect to provider dashboard instead of home
-      navigate("/dashboard/proveedor");
       
     } catch (error: any) {
       console.error('Error submitting application:', error);
@@ -107,11 +119,34 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         </div>
         <CardTitle>Solicitud de Alianza - Proveedor</CardTitle>
         <CardDescription>
-          Completa la información para registrarte como proveedor. Serás aprobado automáticamente.
+          Completa la información para solicitar ser proveedor. Un administrador revisará tu solicitud.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="contactName">Nombre del contacto *</Label>
+              <Input
+                id="contactName"
+                name="contactName"
+                required
+                placeholder="Ej. María"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactLastName">Apellido del contacto *</Label>
+              <Input
+                id="contactLastName"
+                name="contactLastName"
+                required
+                placeholder="Ej. García"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="companyName">Nombre de la empresa *</Label>
@@ -144,6 +179,29 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
                 type="tel"
                 required
                 placeholder="Ej. +57 300 123 4567"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactEmail">Correo electrónico *</Label>
+              <Input
+                id="contactEmail"
+                name="contactEmail"
+                type="email"
+                required
+                placeholder="Ej. contacto@empresa.com"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="socialNetworks">Redes sociales</Label>
+              <Input
+                id="socialNetworks"
+                name="socialNetworks"
+                placeholder="Ej. @empresa, facebook.com/empresa"
                 disabled={loading}
               />
             </div>
@@ -240,7 +298,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
                 Enviando solicitud...
               </>
             ) : (
-              "Registrarse como proveedor"
+              "Enviar solicitud"
             )}
           </Button>
         </form>

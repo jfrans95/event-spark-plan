@@ -165,9 +165,11 @@ export const PackageCarousel = () => {
                     </span>
                   </div>
                   
-                  <Button className="w-full group" size="sm">
-                    Personalizar
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <Button className="w-full group" size="sm" asChild>
+                    <a href="/catalog">
+                      Personalizar
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </a>
                   </Button>
                 </div>
               </CardContent>
@@ -176,8 +178,10 @@ export const PackageCarousel = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
-            Ver Todos los Paquetes
+          <Button variant="outline" size="lg" asChild>
+            <a href="/catalog">
+              Ver Todos los Paquetes
+            </a>
           </Button>
         </div>
       </div>

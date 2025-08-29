@@ -67,7 +67,7 @@ export const Hero = () => {
               </Button>
               
               <Button variant="outline" size="lg" asChild>
-                <a href="/catalog?preset=prediseniados" aria-label="Ver paquetes prediseñados">
+                <a href="/catalog" aria-label="Ver paquetes prediseñados">
                   Ver Paquetes Prediseñados
                 </a>
               </Button>

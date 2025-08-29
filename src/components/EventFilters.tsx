@@ -120,7 +120,10 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
 
         {/* Plan */}
         <div className="space-y-3">
-          <label className="text-sm font-medium">Plan</label>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Star className="h-4 w-4" />
+            Nivel de Servicio
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {PLAN_TYPES.map((plan) => (
               <Button

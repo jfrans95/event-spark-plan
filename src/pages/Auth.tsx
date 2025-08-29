@@ -141,7 +141,7 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      const redirectUrl = `${window.location.origin}/auth`;
+      const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
