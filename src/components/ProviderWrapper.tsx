@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ProviderStatus from "./ProviderStatus";
 import ProviderDashboard from "@/pages/dashboard/provider/ProviderDashboard";
 
@@ -100,15 +101,43 @@ const ProviderWrapper = ({ children }: ProviderWrapperProps) => {
     return children || <ProviderDashboard />;
   }
 
-  // For all other states (none, pending, rejected), redirect to appropriate page
+  // For all other states (none, pending, rejected), redirect to appropriate page using React Router
   if (applicationStatus === 'none') {
-    // No application, should redirect to registration page  
-    window.location.href = '/proveedor/registro';
-    return null;
+    // No application, show registration form inline
+    return (
+      <ProviderStatus 
+        userId={userId}
+        onApplicationSubmitted={handleApplicationSubmitted}
+      />
+    );
   } else if (applicationStatus === 'pending') {
-    // Application pending, should redirect to pending page
-    window.location.href = '/proveedor/solicitud-enviada';
-    return null;
+    // Application pending, show pending status
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-yellow-600" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold">Solicitud en Proceso</h2>
+            <p className="text-muted-foreground">
+              Tu solicitud de registro como proveedor está siendo revisada por nuestro equipo. 
+              Te notificaremos por correo electrónico una vez sea aprobada.
+            </p>
+          </div>
+          {application && (
+            <div className="text-left bg-muted/50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2">Detalles de tu solicitud:</h3>
+              <p className="text-sm text-muted-foreground">Empresa: {application.company_name}</p>
+              <p className="text-sm text-muted-foreground">Enviada: {new Date(application.created_at).toLocaleDateString()}</p>
+            </div>
+          )}
+          <Button onClick={() => { window.location.href = '/'; }} variant="outline">
+            Ir a página principal
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // For rejected or other states, show ProviderStatus

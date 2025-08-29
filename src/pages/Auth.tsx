@@ -25,36 +25,38 @@ const Auth = () => {
 
   // Auth state management
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Usar setTimeout para evitar el loop de auth
-          setTimeout(async () => {
-            await handleUserRedirection(session.user);
-          }, 0);
-        }
-      }
-    );
-
-    // Check for existing session
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
+      // Only redirect if user is already authenticated and on auth page
       if (session?.user) {
         handleUserRedirection(session.user);
       }
     });
+
+    // Set up auth state listener for future changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Only redirect on successful sign in, not on session refresh
+        if (event === 'SIGNED_IN' && session?.user) {
+          await handleUserRedirection(session.user);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
   // Helper function to handle user redirection based on role
   const handleUserRedirection = async (user: any) => {
+    // Add a small delay to prevent flickering
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     try {
       const { data: profile } = await supabase
         .from('profiles')
