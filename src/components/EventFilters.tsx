@@ -17,25 +17,15 @@ interface EventFiltersProps {
   onStartDesign: () => void;
 }
 
-const SPACE_TYPES = [
-  { id: "salon_eventos", name: "Salones de Eventos", icon: "🏛️" },
-  { id: "playas", name: "Playas", icon: "🏖️" },
-  { id: "jardines", name: "Jardines", icon: "🌺" },
-  { id: "hoteles", name: "Hoteles", icon: "🏨" },
-  { id: "espacios_al_aire_libre", name: "Espacios al Aire Libre", icon: "🌳" }
-];
+import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES, getAllSpaceTypes, getAllEventTypes } from "@/constants/productTags";
 
-const EVENT_TYPES = [
-  { category: "Corporativo", items: ["Conferencias", "Lanzamientos", "Team Building"] },
-  { category: "Social", items: ["Bodas", "Quinceañeras", "Aniversarios"] },
-  { category: "Cultural", items: ["Conciertos", "Exposiciones", "Festivales"] }
-];
+const FEATURED_SPACES = getAllSpaceTypes().slice(0, 5);
 
-const PLANS = [
-  { id: "basico", name: "Básico", color: "bg-secondary" },
-  { id: "pro", name: "Pro", color: "bg-primary" },
-  { id: "premium", name: "Premium", color: "bg-accent" }
-];
+const FEATURED_EVENT_CATEGORIES = {
+  "Corporativo": getAllEventTypes().filter(e => e.value.includes('celebraciones_internas') || e.value.includes('activaciones_marca') || e.value.includes('team_building')),
+  "Social": getAllEventTypes().filter(e => e.value.includes('cumpleanos') || e.value.includes('graduaciones') || e.value.includes('reuniones_especiales')),
+  "Cultural": getAllEventTypes().filter(e => e.value.includes('eventos_pequenos') || e.value.includes('eventos_medios') || e.value.includes('eventos_institucionales'))
+};
 
 export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersProps) => {
   const [filters, setFilters] = useState<EventFilters>({
@@ -66,16 +56,16 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
             Tipo de Espacio
           </label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {SPACE_TYPES.map((space) => (
+            {FEATURED_SPACES.map((space) => (
               <Button
-                key={space.id}
-                variant={filters.spaceType === space.id ? "default" : "outline"}
+                key={space.value}
+                variant={filters.spaceType === space.value ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateFilter("spaceType", space.id)}
+                onClick={() => updateFilter("spaceType", space.value)}
                 className="justify-start text-xs h-auto py-2"
               >
                 <span className="mr-1">{space.icon}</span>
-                {space.name}
+                {space.label}
               </Button>
             ))}
           </div>
@@ -108,18 +98,18 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
             Tipo de Evento
           </label>
           <div className="space-y-3">
-            {EVENT_TYPES.map((category) => (
-              <div key={category.category} className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground">{category.category}</h4>
+            {Object.entries(FEATURED_EVENT_CATEGORIES).map(([category, events]) => (
+              <div key={category} className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">{category}</h4>
                 <div className="flex flex-wrap gap-2">
-                  {category.items.map((item) => (
+                  {events.map((event) => (
                     <Badge
-                      key={item}
-                      variant={filters.eventType === item ? "default" : "outline"}
+                      key={event.value}
+                      variant={filters.eventType === event.value ? "default" : "outline"}
                       className="cursor-pointer"
-                      onClick={() => updateFilter("eventType", item)}
+                      onClick={() => updateFilter("eventType", event.value)}
                     >
-                      {item}
+                      {event.icon} {event.label}
                     </Badge>
                   ))}
                 </div>
@@ -132,15 +122,15 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
         <div className="space-y-3">
           <label className="text-sm font-medium">Plan</label>
           <div className="grid grid-cols-3 gap-2">
-            {PLANS.map((plan) => (
+            {PLAN_TYPES.map((plan) => (
               <Button
-                key={plan.id}
-                variant={filters.plan === plan.id ? "default" : "outline"}
+                key={plan.value}
+                variant={filters.plan === plan.value ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateFilter("plan", plan.id)}
+                onClick={() => updateFilter("plan", plan.value)}
                 className="h-auto py-3"
               >
-                {plan.name}
+                {plan.label}
               </Button>
             ))}
           </div>

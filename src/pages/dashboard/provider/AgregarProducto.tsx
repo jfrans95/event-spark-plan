@@ -12,68 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { Upload, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
-const spaceTypes = {
-  "🌿 Espacios Abiertos / Aire libre": [
-    { value: "parques_publicos", label: "Parques públicos" },
-    { value: "jardines_botanicos", label: "Jardines botánicos" },
-    { value: "miradores_naturales", label: "Miradores naturales" },
-    { value: "playas", label: "Playas" },
-    { value: "plazoletas", label: "Plazoletas" },
-    { value: "calles_barrios", label: "Calles/Barrios" }
-  ],
-  "🏢 Espacios Cerrados": [
-    { value: "salones_eventos", label: "Salones de eventos" },
-    { value: "teatros", label: "Teatros" },
-    { value: "auditorios", label: "Auditorios" },
-    { value: "centros_convenciones", label: "Centros de convenciones" },
-    { value: "discotecas", label: "Discotecas" },
-    { value: "restaurantes_privados", label: "Restaurantes privados" },
-    { value: "iglesias_templos", label: "Iglesias/Templos" },
-    { value: "galerias_museos", label: "Galerías/Museos" }
-  ],
-  "🔀 Espacios No Convencionales": [
-    { value: "bodegas", label: "Bodegas" },
-    { value: "casas_patrimoniales", label: "Casas patrimoniales" },
-    { value: "rooftops", label: "Rooftops" },
-    { value: "locales_en_desuso", label: "Locales en desuso" },
-    { value: "estudios", label: "Estudios" },
-    { value: "fincas_privadas", label: "Fincas privadas" }
-  ],
-  "🏠 Casas Familiares": [
-    { value: "casas_familiares", label: "Casas familiares" },
-    { value: "unidades_residenciales", label: "Unidades residenciales" },
-    { value: "casas_patio_jardin", label: "Casas con patio/jardín" },
-    { value: "viviendas_adecuadas", label: "Viviendas adecuadas" }
-  ],
-  "🚚 Espacios Móviles / Temporales": [
-    { value: "carpas", label: "Carpas" },
-    { value: "contenedores", label: "Contenedores" }
-  ]
-};
-
-const eventTypes = {
-  "📊 Eventos Corporativos": [
-    { value: "celebraciones_internas", label: "Celebraciones internas" },
-    { value: "activaciones_marca", label: "Activaciones de marca" },
-    { value: "team_building", label: "Team building" },
-    { value: "cierre_ano", label: "Cierre de año" }
-  ],
-  "🥂 Eventos Sociales": [
-    { value: "cumpleanos", label: "Cumpleaños" },
-    { value: "dia_madre_padre", label: "Día madre/padre" },
-    { value: "fechas_religiosas", label: "Fechas religiosas" },
-    { value: "graduaciones", label: "Graduaciones" },
-    { value: "reuniones_especiales", label: "Reuniones especiales" }
-  ],
-  "🎭 Eventos Culturales (Institucionales)": [
-    { value: "eventos_pequenos", label: "Eventos pequeños" },
-    { value: "eventos_medios", label: "Eventos medios" },
-    { value: "eventos_institucionales", label: "Eventos institucionales" },
-    { value: "encuentros_publicos", label: "Encuentros públicos" },
-    { value: "lanzamientos_aniversarios", label: "Lanzamientos/Aniversarios" }
-  ]
-};
+import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES, getCapacityFromValue } from "@/constants/productTags";
 
 interface ProductFormData {
   name: string;
@@ -103,20 +42,8 @@ const AgregarProducto = () => {
     formState: { errors }
   } = useForm<ProductFormData>();
 
-  const getCapacityFromValue = (value: number): [number, number] => {
-    if (value <= 100) {
-      const min = Math.max(20, value - (value % 20));
-      const max = min + 20;
-      return [min, max];
-    } else if (value <= 300) {
-      const min = Math.max(100, value - (value % 50));
-      const max = min + 50;
-      return [min, max];
-    } else {
-      const min = Math.max(300, value - (value % 100));
-      const max = min + 100;
-      return [min, max];
-    }
+  const getCapacityRangeFromValue = (value: number): [number, number] => {
+    return getCapacityFromValue(value);
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,7 +131,7 @@ const AgregarProducto = () => {
       }
 
       // Get capacity range
-      const [capacityMin, capacityMax] = getCapacityFromValue(capacityRange[0]);
+      const [capacityMin, capacityMax] = getCapacityRangeFromValue(capacityRange[0]);
 
       // Insert product
       const { error: insertError } = await supabase
@@ -324,7 +251,7 @@ const AgregarProducto = () => {
             {/* Tipos de espacios */}
             <div className="space-y-4">
               <Label>Tipos de Espacios *</Label>
-              {Object.entries(spaceTypes).map(([category, spaces]) => (
+              {Object.entries(SPACE_TYPES).map(([category, spaces]) => (
                 <div key={category} className="space-y-2">
                   <h4 className="font-medium text-sm">{category}</h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -338,7 +265,7 @@ const AgregarProducto = () => {
                           }
                         />
                         <Label htmlFor={space.value} className="text-sm">
-                          {space.label}
+                          {space.icon} {space.label}
                         </Label>
                       </div>
                     ))}
@@ -362,7 +289,7 @@ const AgregarProducto = () => {
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>20</span>
                   <span className="font-medium">
-                    {getCapacityFromValue(capacityRange[0])[0]} - {getCapacityFromValue(capacityRange[0])[1]} personas
+                    {getCapacityRangeFromValue(capacityRange[0])[0]} - {getCapacityRangeFromValue(capacityRange[0])[1]} personas
                   </span>
                   <span>500</span>
                 </div>
@@ -372,7 +299,7 @@ const AgregarProducto = () => {
             {/* Tipos de eventos */}
             <div className="space-y-4">
               <Label>Tipos de Eventos *</Label>
-              {Object.entries(eventTypes).map(([category, events]) => (
+              {Object.entries(EVENT_TYPES).map(([category, events]) => (
                 <div key={category} className="space-y-2">
                   <h4 className="font-medium text-sm">{category}</h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -386,7 +313,7 @@ const AgregarProducto = () => {
                           }
                         />
                         <Label htmlFor={event.value} className="text-sm">
-                          {event.label}
+                          {event.icon} {event.label}
                         </Label>
                       </div>
                     ))}
@@ -403,9 +330,11 @@ const AgregarProducto = () => {
                   <SelectValue placeholder="Selecciona un plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basico">Básico</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
+                  {PLAN_TYPES.map((plan) => (
+                    <SelectItem key={plan.value} value={plan.value}>
+                      {plan.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
