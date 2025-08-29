@@ -104,6 +104,9 @@ export type Database = {
         Row: {
           admin_observations: string | null
           company_name: string
+          contact_email: string | null
+          contact_last_name: string | null
+          contact_name: string | null
           contact_phone: string
           created_at: string
           evidence_photos: string[] | null
@@ -113,6 +116,7 @@ export type Database = {
           product_category: string
           reviewed_at: string | null
           reviewed_by: string | null
+          social_networks: string | null
           specialization: string
           status: string
           updated_at: string
@@ -122,6 +126,9 @@ export type Database = {
         Insert: {
           admin_observations?: string | null
           company_name: string
+          contact_email?: string | null
+          contact_last_name?: string | null
+          contact_name?: string | null
           contact_phone: string
           created_at?: string
           evidence_photos?: string[] | null
@@ -131,6 +138,7 @@ export type Database = {
           product_category: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          social_networks?: string | null
           specialization: string
           status?: string
           updated_at?: string
@@ -140,6 +148,9 @@ export type Database = {
         Update: {
           admin_observations?: string | null
           company_name?: string
+          contact_email?: string | null
+          contact_last_name?: string | null
+          contact_name?: string | null
           contact_phone?: string
           created_at?: string
           evidence_photos?: string[] | null
@@ -149,6 +160,7 @@ export type Database = {
           product_category?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          social_networks?: string | null
           specialization?: string
           status?: string
           updated_at?: string

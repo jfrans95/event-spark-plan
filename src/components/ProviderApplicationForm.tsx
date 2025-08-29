@@ -73,6 +73,10 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
       
       const applicationData = {
         user_id: userId,
+        contact_name: formData.get('contactName') as string,
+        contact_last_name: formData.get('contactLastName') as string,
+        contact_email: formData.get('contactEmail') as string,
+        social_networks: formData.get('socialNetworks') as string,
         company_name: formData.get('companyName') as string,
         nit: formData.get('nit') as string,
         contact_phone: formData.get('contactPhone') as string,
