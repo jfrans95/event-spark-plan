@@ -37,8 +37,26 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
     const formData = new FormData(e.currentTarget);
     
     try {
-      // TODO: Handle file uploads when storage is configured
+      // Handle file uploads to storage
       const evidencePhotos: string[] = [];
+      
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${userId}/${Date.now()}-${i}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('provider-evidence')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+          } else if (uploadData) {
+            evidencePhotos.push(uploadData.path);
+          }
+        }
+      }
       
       const applicationData = {
         user_id: userId,
@@ -49,8 +67,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         years_experience: parseInt(formData.get('yearsExperience') as string),
         experience_description: formData.get('experienceDescription') as string,
         specialization: formData.get('specialization') as string,
-        evidence_photos: evidencePhotos,
-        status: 'pending'
+        evidence_photos: evidencePhotos
       };
 
       const { error } = await supabase
@@ -62,12 +79,13 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
       }
 
       toast({
-        title: "Solicitud enviada",
-        description: "Gracias por aplicar a esta alianza. El administrador revisará tu solicitud y te enviará un correo.",
+        title: "¡Bienvenido a EventCraft!",
+        description: "Tu solicitud ha sido aprobada automáticamente. Ya puedes agregar tus productos.",
       });
 
       onSuccess();
-      navigate("/");
+      // Redirect to provider dashboard instead of home
+      navigate("/dashboard/proveedor");
       
     } catch (error: any) {
       console.error('Error submitting application:', error);
@@ -89,7 +107,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         </div>
         <CardTitle>Solicitud de Alianza - Proveedor</CardTitle>
         <CardDescription>
-          Completa la información para aplicar como proveedor de EventCraft
+          Completa la información para registrarte como proveedor. Serás aprobado automáticamente.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -222,7 +240,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
                 Enviando solicitud...
               </>
             ) : (
-              "Hacer solicitud de alianza"
+              "Registrarse como proveedor"
             )}
           </Button>
         </form>
