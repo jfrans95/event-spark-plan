@@ -165,8 +165,12 @@ export const PackageCarousel = () => {
                     </span>
                   </div>
                   
-                  <Button className="w-full group" size="sm" asChild>
-                    <a href="/catalog">
+                  <Button 
+                    className="w-full group" 
+                    size="sm" 
+                    asChild
+                  >
+                    <a href={`/catalog?space=${encodeURIComponent(pkg.venue)}&event=${encodeURIComponent(pkg.type)}&plan=${pkg.plan.toLowerCase()}&guests=${pkg.guestCount.split('-')[0]}`}>
                       Personalizar
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </a>
