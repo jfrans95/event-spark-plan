@@ -95,17 +95,16 @@ const plans = ["Básico", "Pro", "Premium"];
 
   const getDisplayValue = (field: keyof EventDesignerData) => {
     const value = formData[field];
-    if (!value && field !== 'guestCount') return "";
     
     switch (field) {
       case 'spaceType':
-        return value || "Seleccionar";
+        return value || "Tipo de lugar";
       case 'guestCount':
         return `${value} invitados`;
       case 'eventType':
-        return value || "Seleccionar";
+        return value || "Tipo de eventos";
       case 'plan':
-        return value || "Seleccionar";
+        return value || "Plan";
       default:
         return "";
     }
