@@ -28,6 +28,7 @@ const productCategories = [
 const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormProps) => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     contactName: '',
     contactLastName: '',
@@ -50,25 +51,43 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
     const formData = new FormData(e.currentTarget);
     
     try {
-      // Handle file uploads to storage
-      const evidencePhotos: string[] = [];
-      
+      let evidenceUrls: string[] = [];
+      let logoUrl: string | null = null;
+
+      // Upload logo if provided
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const logoFileName = `${userId}/logo-${Date.now()}.${fileExt}`;
+        
+        const { error: logoUploadError } = await supabase.storage
+          .from('provider-evidence')
+          .upload(logoFileName, logoFile);
+        
+        if (logoUploadError) {
+          throw logoUploadError;
+        }
+        
+        logoUrl = logoFileName;
+      }
+
+      // Upload evidence photos if any
       if (files && files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
+        const uploadPromises = Array.from(files).map(async (file) => {
           const fileExt = file.name.split('.').pop();
-          const fileName = `${userId}/${Date.now()}-${i}.${fileExt}`;
+          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
           
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('provider-evidence')
             .upload(fileName, file);
-
+          
           if (uploadError) {
-            console.error('Error uploading file:', uploadError);
-          } else if (uploadData) {
-            evidencePhotos.push(uploadData.path);
+            throw uploadError;
           }
-        }
+          
+          return fileName;
+        });
+
+        evidenceUrls = await Promise.all(uploadPromises);
       }
       
       const applicationData = {
@@ -84,7 +103,8 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         years_experience: parseInt(formData.get('yearsExperience') as string),
         experience_description: formData.get('experienceDescription') as string,
         specialization: formData.get('specialization') as string,
-        evidence_photos: evidencePhotos,
+        evidence_photos: evidenceUrls.length > 0 ? evidenceUrls : null,
+        logo_url: logoUrl,
         status: 'pending'
       };
 
@@ -262,6 +282,36 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
               className="min-h-[80px]"
               disabled={loading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="logo">Logo de la empresa</Label>
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center">
+              <Building className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+              <div className="text-sm text-muted-foreground mb-2">
+                Sube el logo de tu empresa
+              </div>
+              <Input
+                id="logo"
+                name="logo"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                disabled={loading}
+              />
+              <Label 
+                htmlFor="logo" 
+                className="inline-block px-4 py-2 bg-secondary text-secondary-foreground rounded-md cursor-pointer hover:bg-secondary/90"
+              >
+                Seleccionar logo
+              </Label>
+              {logoFile && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {logoFile.name}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

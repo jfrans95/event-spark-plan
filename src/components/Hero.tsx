@@ -55,17 +55,6 @@ export const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg"
-                asChild
-              >
-                <a href="/catalog" aria-label="Diseñar evento ahora">
-                  Diseñar Evento
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </a>
-              </Button>
-              
               <Button variant="outline" size="lg" asChild>
                 <a href="/catalog" aria-label="Ver paquetes prediseñados">
                   Ver Paquetes Prediseñados
@@ -91,8 +80,12 @@ export const Hero = () => {
           </div>
 
           {/* Right Content - Event Designer */}
-          <div className="lg:justify-self-end w-full max-w-md">
-            <EventDesigner />
+          <div className="lg:justify-self-center w-full max-w-lg">
+            <div className="relative">
+              <div className="absolute -top-2 -left-2 w-6 h-6 bg-accent rounded-full animate-pulse"></div>
+              <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-primary rounded-full animate-pulse delay-300"></div>
+              <EventDesigner />
+            </div>
           </div>
         </div>
       </div>
