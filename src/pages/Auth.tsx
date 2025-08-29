@@ -78,10 +78,6 @@ const Auth = () => {
           title: "Bienvenido",
           description: "Has iniciado sesión correctamente",
         });
-      } else if (user.user_metadata?.role === 'provider') {
-        // Usuario registrado como proveedor pero sin perfil aprobado
-        setPendingProviderUser(user);
-        setShowProviderForm(true);
       } else {
         // Fallback to general dashboard
         navigate("/dashboard");
@@ -190,22 +186,6 @@ const Auth = () => {
     }
   };
 
-  // If showing provider form, render it instead
-  if (showProviderForm && pendingProviderUser) {
-    return (
-      <ProviderStatus 
-        userId={pendingProviderUser.id}
-        onApplicationSubmitted={() => {
-          setShowProviderForm(false);
-          setPendingProviderUser(null);
-          toast({
-            title: "Solicitud enviada",
-            description: "Te notificaremos cuando sea revisada por un administrador.",
-          });
-        }}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">

@@ -29,6 +29,7 @@ import Perfil from "@/pages/dashboard/provider/Perfil";
 import Solicitudes from "@/pages/dashboard/provider/Solicitudes";
 import Inventario from "@/pages/dashboard/provider/Inventario";
 import AgregarProducto from "@/pages/dashboard/provider/AgregarProducto";
+import ProviderWrapper from "@/components/ProviderWrapper";
 
 export const AppRouter = () => {
   return (
@@ -103,7 +104,9 @@ export const AppRouter = () => {
         <PrivateRoute>
           <RoleRoute allowed={['provider']}>
             <ProviderLayout>
-              <ProviderDashboard />
+              <ProviderWrapper>
+                <ProviderDashboard />
+              </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
         </PrivateRoute>
@@ -112,7 +115,9 @@ export const AppRouter = () => {
         <PrivateRoute>
           <RoleRoute allowed={['provider']}>
             <ProviderLayout>
-              <Perfil />
+              <ProviderWrapper>
+                <Perfil />
+              </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
         </PrivateRoute>
@@ -121,7 +126,9 @@ export const AppRouter = () => {
         <PrivateRoute>
           <RoleRoute allowed={['provider']}>
             <ProviderLayout>
-              <Solicitudes />
+              <ProviderWrapper>
+                <Solicitudes />
+              </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
         </PrivateRoute>
@@ -130,7 +137,9 @@ export const AppRouter = () => {
         <PrivateRoute>
           <RoleRoute allowed={['provider']}>
             <ProviderLayout>
-              <Inventario />
+              <ProviderWrapper>
+                <Inventario />
+              </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
         </PrivateRoute>
@@ -139,7 +148,9 @@ export const AppRouter = () => {
         <PrivateRoute>
           <RoleRoute allowed={['provider']}>
             <ProviderLayout>
-              <AgregarProducto />
+              <ProviderWrapper>
+                <AgregarProducto />
+              </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
         </PrivateRoute>
