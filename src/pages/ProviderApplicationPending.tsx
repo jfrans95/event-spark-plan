@@ -1,10 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Clock, Heart, Home } from "lucide-react";
+import { Clock, Heart, Home, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const ProviderApplicationPending = () => {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error closing session:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cerrar sesión",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
@@ -34,10 +54,14 @@ const ProviderApplicationPending = () => {
             <p className="text-sm text-muted-foreground">
               Te notificaremos por correo electrónico una vez que tu solicitud sea aprobada.
             </p>
-            <div className="pt-4">
+            <div className="pt-4 space-y-2">
               <Button onClick={() => navigate('/')} className="w-full">
                 <Home className="w-4 h-4 mr-2" />
                 Ir a Página Principal
+              </Button>
+              <Button onClick={handleLogout} variant="outline" className="w-full">
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
               </Button>
             </div>
           </CardContent>

@@ -113,33 +113,9 @@ const ProviderWrapper = ({ children }: ProviderWrapperProps) => {
       />
     );
   } else if (applicationStatus === 'pending') {
-    // Application pending, show pending status
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold">Solicitud en Proceso</h2>
-            <p className="text-muted-foreground">
-              Tu solicitud de registro como proveedor está siendo revisada por nuestro equipo. 
-              Te notificaremos por correo electrónico una vez sea aprobada.
-            </p>
-          </div>
-          {application && (
-            <div className="text-left bg-muted/50 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">Detalles de tu solicitud:</h3>
-              <p className="text-sm text-muted-foreground">Empresa: {application.company_name}</p>
-              <p className="text-sm text-muted-foreground">Enviada: {new Date(application.created_at).toLocaleDateString()}</p>
-            </div>
-          )}
-          <Button onClick={() => navigate('/')} variant="outline">
-            Ir a página principal
-          </Button>
-        </div>
-      </div>
-    );
+    // Application pending, redirect to pending page
+    navigate('/proveedor/solicitud-enviada');
+    return null;
   }
 
   // For rejected or other states, show ProviderStatus

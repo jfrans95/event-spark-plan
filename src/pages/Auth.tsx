@@ -357,7 +357,6 @@ const Auth = () => {
                         <SelectValue placeholder="Selecciona tu rol" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="administrator">Administrador</SelectItem>
                         <SelectItem value="collaborator">Colaborador</SelectItem>
                         <SelectItem value="provider">Proveedor</SelectItem>
                       </SelectContent>
