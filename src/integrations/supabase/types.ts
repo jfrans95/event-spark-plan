@@ -112,6 +112,7 @@ export type Database = {
           evidence_photos: string[] | null
           experience_description: string
           id: string
+          logo_url: string | null
           nit: string
           product_category: string
           reviewed_at: string | null
@@ -134,6 +135,7 @@ export type Database = {
           evidence_photos?: string[] | null
           experience_description: string
           id?: string
+          logo_url?: string | null
           nit: string
           product_category: string
           reviewed_at?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           evidence_photos?: string[] | null
           experience_description?: string
           id?: string
+          logo_url?: string | null
           nit?: string
           product_category?: string
           reviewed_at?: string | null

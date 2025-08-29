@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
-import ProviderApplicationForm from "@/components/ProviderApplicationForm";
+import ProviderStatus from "@/components/ProviderStatus";
 
 type UserRole = 'administrator' | 'collaborator' | 'provider';
 
@@ -193,15 +193,17 @@ const Auth = () => {
   // If showing provider form, render it instead
   if (showProviderForm && pendingProviderUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-        <ProviderApplicationForm 
-          userId={pendingProviderUser.id}
-          onSuccess={() => {
-            setShowProviderForm(false);
-            setPendingProviderUser(null);
-          }}
-        />
-      </div>
+      <ProviderStatus 
+        userId={pendingProviderUser.id}
+        onApplicationSubmitted={() => {
+          setShowProviderForm(false);
+          setPendingProviderUser(null);
+          toast({
+            title: "Solicitud enviada",
+            description: "Te notificaremos cuando sea revisada por un administrador.",
+          });
+        }}
+      />
     );
   }
 

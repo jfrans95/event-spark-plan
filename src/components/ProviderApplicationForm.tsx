@@ -285,7 +285,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="logo">Logo de la empresa</Label>
+            <Label htmlFor="logo">Logo de la empresa (opcional)</Label>
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center">
               <Building className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
               <div className="text-sm text-muted-foreground mb-2">
