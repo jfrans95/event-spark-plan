@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 interface ProviderApplicationFormProps {
   userId: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 const productCategories = [
@@ -121,7 +121,7 @@ const ProviderApplicationForm = ({ userId, onSuccess }: ProviderApplicationFormP
         description: "Tu solicitud ha sido enviada al administrador. Te notificaremos cuando sea revisada.",
       });
 
-      onSuccess();
+      onSuccess?.();
       
     } catch (error: any) {
       console.error('Error submitting application:', error);

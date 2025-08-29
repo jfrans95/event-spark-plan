@@ -100,7 +100,18 @@ const ProviderWrapper = ({ children }: ProviderWrapperProps) => {
     return children || <ProviderDashboard />;
   }
 
-  // For all other states (none, pending, rejected), show ProviderStatus
+  // For all other states (none, pending, rejected), redirect to appropriate page
+  if (applicationStatus === 'none') {
+    // No application, should redirect to registration page  
+    window.location.href = '/proveedor/registro';
+    return null;
+  } else if (applicationStatus === 'pending') {
+    // Application pending, should redirect to pending page
+    window.location.href = '/proveedor/solicitud-enviada';
+    return null;
+  }
+
+  // For rejected or other states, show ProviderStatus
   return (
     <ProviderStatus 
       userId={userId}

@@ -30,6 +30,8 @@ import Solicitudes from "@/pages/dashboard/provider/Solicitudes";
 import Inventario from "@/pages/dashboard/provider/Inventario";
 import AgregarProducto from "@/pages/dashboard/provider/AgregarProducto";
 import ProviderWrapper from "@/components/ProviderWrapper";
+import ProviderRegistration from "@/pages/ProviderRegistration";
+import ProviderApplicationPending from "@/pages/ProviderApplicationPending";
 
 export const AppRouter = () => {
   return (
@@ -41,6 +43,10 @@ export const AppRouter = () => {
       <Route path="/track/:code" element={<Track />} />
       <Route path="/seed-admin" element={<SeedAdmin />} />
       
+      {/* Provider public routes */}
+      <Route path="/proveedor/registro" element={<ProviderRegistration />} />
+      <Route path="/proveedor/solicitud-enviada" element={<ProviderApplicationPending />} />
+
       {/* Dashboard redirect route */}
       <Route path="/dashboard" element={
         <PrivateRoute>

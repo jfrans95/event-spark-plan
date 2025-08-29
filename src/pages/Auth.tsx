@@ -63,16 +63,41 @@ const Auth = () => {
         .single();
 
       if (profile?.role) {
-        // Redirect to appropriate dashboard based on role
-        const roleRoutes = {
-          administrator: '/dashboard/admin',
-          advisor: '/dashboard/asesor',
-          collaborator: '/dashboard/colaborador',
-          provider: '/dashboard/proveedor'
-        };
-        
-        const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes] || '/dashboard';
-        navigate(targetRoute);
+        // For providers, check their application status
+        if (profile.role === 'provider') {
+          const { data: application } = await supabase
+            .from('provider_applications')
+            .select('status')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!application) {
+            // No application, redirect to registration
+            navigate('/proveedor/registro');
+            return;
+          } else if (application.status === 'pending') {
+            // Application pending, show pending page
+            navigate('/proveedor/solicitud-enviada');
+            return;
+          } else if (application.status === 'approved') {
+            // Approved, go to dashboard
+            navigate('/dashboard/proveedor');
+          } else {
+            // Rejected, back to registration
+            navigate('/proveedor/registro');
+            return;
+          }
+        } else {
+          // Other roles, redirect to appropriate dashboard
+          const roleRoutes = {
+            administrator: '/dashboard/admin',
+            advisor: '/dashboard/asesor',
+            collaborator: '/dashboard/colaborador'
+          };
+          
+          const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes] || '/dashboard';
+          navigate(targetRoute);
+        }
         
         toast({
           title: "Bienvenido",
@@ -137,7 +162,7 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      const redirectUrl = `https://e99ffe98-483a-429e-8e56-3af26b1ccc90.lovableproject.com/auth`;
+      const redirectUrl = `${window.location.origin}/proveedor/registro`;
       
       const { data, error } = await supabase.auth.signUp({
         email,

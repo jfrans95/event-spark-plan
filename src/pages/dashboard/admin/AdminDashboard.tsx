@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Users, FileText, TrendingUp, Calendar, AlertCircle } from "lucide-react";
 import { StatusPill } from "@/components/common/StatusPill";
+import ProviderApplicationsList from "@/components/admin/ProviderApplicationsList";
 
 const AdminDashboard = () => {
   // Mock data
@@ -80,6 +81,7 @@ const AdminDashboard = () => {
         <TabsList>
           <TabsTrigger value="events">Eventos en Ejecución</TabsTrigger>
           <TabsTrigger value="quotes">Nuevas Solicitudes</TabsTrigger>
+          <TabsTrigger value="providers">Solicitudes Proveedores</TabsTrigger>
           <TabsTrigger value="analytics">Análisis y Reportes</TabsTrigger>
         </TabsList>
         
@@ -136,6 +138,10 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="providers" className="space-y-4">
+          <ProviderApplicationsList />
         </TabsContent>
         
         <TabsContent value="analytics" className="space-y-4">
