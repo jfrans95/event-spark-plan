@@ -25,18 +25,7 @@ const Auth = () => {
 
   // Auth state management
   useEffect(() => {
-    // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Only redirect if user is already authenticated and on auth page
-      if (session?.user) {
-        handleUserRedirection(session.user);
-      }
-    });
-
-    // Set up auth state listener for future changes
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
@@ -45,9 +34,34 @@ const Auth = () => {
         // Only redirect on successful sign in, not on session refresh
         if (event === 'SIGNED_IN' && session?.user) {
           await handleUserRedirection(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          // Clear any loading states when signed out
+          setLoading(false);
         }
       }
     );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      // Validate the session if it exists
+      if (session?.user) {
+        try {
+          const { data: authUser, error } = await supabase.auth.getUser();
+          if (error || !authUser.user) {
+            // Invalid session, sign out
+            await supabase.auth.signOut();
+          } else {
+            await handleUserRedirection(session.user);
+          }
+        } catch (error) {
+          console.error('Error validating session:', error);
+          await supabase.auth.signOut();
+        }
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, [navigate]);

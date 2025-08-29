@@ -41,6 +41,15 @@ export const getSessionAndProfile = async (): Promise<SessionAndProfile> => {
       return { session: null, user: null, profile: null };
     }
 
+    // Verify the user still exists in the database
+    const { data: authUser, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !authUser.user) {
+      // Invalid session, clear it
+      await supabase.auth.signOut();
+      return { session: null, user: null, profile: null };
+    }
+
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -50,12 +59,19 @@ export const getSessionAndProfile = async (): Promise<SessionAndProfile> => {
 
     if (profileError) {
       console.error('Error fetching profile:', profileError);
+      // If user exists but no profile, clear session and let them re-register
+      if (profileError.code === 'PGRST116') {
+        await supabase.auth.signOut();
+        return { session: null, user: null, profile: null };
+      }
       return { session, user: session.user, profile: null };
     }
 
     return { session, user: session.user, profile };
   } catch (error) {
     console.error('Error in getSessionAndProfile:', error);
+    // Clear invalid session
+    await supabase.auth.signOut();
     return { session: null, user: null, profile: null };
   }
 };
