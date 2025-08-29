@@ -98,6 +98,7 @@ const Auth = () => {
           } else if (application.status === 'approved') {
             // Approved, go to dashboard
             navigate('/dashboard/proveedor');
+            return;
           } else {
             // Rejected, back to registration
             navigate('/proveedor/registro');
@@ -107,8 +108,11 @@ const Auth = () => {
           // Other roles, redirect to appropriate dashboard
           const roleRoutes = {
             administrator: '/dashboard/admin',
-            advisor: '/dashboard/asesor',
-            collaborator: '/dashboard/colaborador'
+            admin: '/dashboard/admin',
+            advisor: '/dashboard/asesor', 
+            asesor: '/dashboard/asesor',
+            collaborator: '/dashboard/colaborador',
+            colaborador: '/dashboard/colaborador'
           };
           
           const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes] || '/dashboard';
@@ -123,7 +127,7 @@ const Auth = () => {
         // Fallback to general dashboard
         navigate("/dashboard");
         toast({
-          title: "Bienvenido",
+          title: "Bienvenido", 
           description: "Has iniciado sesión correctamente",
         });
       }

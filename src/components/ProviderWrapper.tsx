@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const ProviderWrapper = ({ children }: ProviderWrapperProps) => {
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('none');
   const [application, setApplication] = useState<Application | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkProviderStatus();
@@ -132,7 +134,7 @@ const ProviderWrapper = ({ children }: ProviderWrapperProps) => {
               <p className="text-sm text-muted-foreground">Enviada: {new Date(application.created_at).toLocaleDateString()}</p>
             </div>
           )}
-          <Button onClick={() => { window.location.href = '/'; }} variant="outline">
+          <Button onClick={() => navigate('/')} variant="outline">
             Ir a página principal
           </Button>
         </div>
