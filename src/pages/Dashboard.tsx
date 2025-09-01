@@ -24,7 +24,7 @@ const Dashboard = () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        navigate("/aliados");
+        navigate("/auth");
         return;
       }
 
@@ -65,7 +65,7 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error checking user:', error);
-      navigate("/aliados");
+      navigate("/auth");
     } finally {
       setLoading(false);
     }
