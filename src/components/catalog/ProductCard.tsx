@@ -18,6 +18,9 @@ const ProductCard = ({ product, onAdd }: Props) => {
         {product.description && (
           <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
         )}
+        {product.provider_name && (
+          <p className="text-xs text-muted-foreground">Por {product.provider_name}</p>
+        )}
         <div className="flex items-center justify-between pt-2">
           <span className="font-semibold">${product.price.toLocaleString("es-CO")} COP</span>
           <Button size="sm" onClick={onAdd}>Agregar</Button>

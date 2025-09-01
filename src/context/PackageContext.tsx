@@ -23,6 +23,7 @@ export interface Product {
   event_types?: string[];
   plan?: string;
   activo?: boolean;
+  provider_name?: string;
 }
 
 export interface PackageItem {

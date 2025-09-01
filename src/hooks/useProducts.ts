@@ -33,7 +33,8 @@ const mapDbProductToProduct = (dbProduct: any): Product => ({
   capacity_max: dbProduct.capacity_max,
   event_types: dbProduct.event_types,
   plan: dbProduct.plan,
-  activo: dbProduct.activo
+  activo: dbProduct.activo,
+  provider_name: dbProduct.provider_profiles?.provider_applications?.company_name || "Proveedor"
 });
 
 export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' = 'filtered') => {
@@ -54,29 +55,34 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
             provider_profiles!inner(
               user_id,
               provider_applications!inner(
-                status
+                status,
+                company_name
               )
             )
           `)
           .eq('activo', true)
           .eq('provider_profiles.provider_applications.status', 'approved');
 
-        // Apply filters only in 'filtered' mode
+        // Apply filters only in 'filtered' mode - strict AND logic
         if (mode === 'filtered') {
+          // Espacio filter: product must support this space type
           if (filters?.espacio) {
             query = query.contains('space_types', [filters.espacio]);
           }
 
+          // Aforo filter: product capacity range must include the guest count
           if (filters?.aforo) {
             query = query
-              .lte('capacity_min', filters.aforo)
-              .gte('capacity_max', filters.aforo);
+              .lte('capacity_min', filters.aforo)  // min capacity <= guest count
+              .gte('capacity_max', filters.aforo); // max capacity >= guest count
           }
 
+          // Evento filter: product must support this event type
           if (filters?.evento) {
             query = query.contains('event_types', [filters.evento]);
           }
 
+          // Plan filter: product must match exact plan
           if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
             query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
           }
@@ -118,7 +124,7 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
           import('@/hooks/use-toast').then(({ toast }) => {
             toast({
               title: "Error al cargar productos",
-              description: errorMessage,
+              description: `${errorMessage}`,
               variant: "destructive"
             });
           });

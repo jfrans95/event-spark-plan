@@ -13,6 +13,7 @@ import { Loader2, AlertCircle, Edit, Package } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { getSpaceTypeLabel, getEventTypeLabel, getPlanLabel } from "@/constants/productTags";
 
 const CATEGORIES: Category[] = [
   "Montaje técnico",
@@ -79,9 +80,8 @@ const Catalog = () => {
 
   const hasActiveFilters = !!(appliedFilters.espacio || appliedFilters.evento || appliedFilters.plan || appliedFilters.aforo);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => p.category === activeCategory);
-  }, [products, activeCategory]);
+  // Products are already filtered by category in useProducts hook
+  const filteredProducts = products;
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,20 +104,20 @@ const Catalog = () => {
                   </Button>
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
-                  {appliedFilters.espacio && (
-                    <Badge variant="secondary">📍 {appliedFilters.espacio}</Badge>
-                  )}
-                  {appliedFilters.evento && (
-                    <Badge variant="secondary">🎉 {appliedFilters.evento}</Badge>
-                  )}
-                  {appliedFilters.plan && (
-                    <Badge variant="secondary">💎 {appliedFilters.plan}</Badge>
-                  )}
-                  {appliedFilters.aforo && (
-                    <Badge variant="secondary">👥 {appliedFilters.aforo} invitados</Badge>
-                  )}
-                </div>
+                 <div className="flex flex-wrap gap-2">
+                   {appliedFilters.espacio && (
+                     <Badge variant="secondary">📍 {getSpaceTypeLabel(appliedFilters.espacio)}</Badge>
+                   )}
+                   {appliedFilters.evento && (
+                     <Badge variant="secondary">🎉 {getEventTypeLabel(appliedFilters.evento)}</Badge>
+                   )}
+                   {appliedFilters.plan && (
+                     <Badge variant="secondary">💎 {getPlanLabel(appliedFilters.plan)}</Badge>
+                   )}
+                   {appliedFilters.aforo && (
+                     <Badge variant="secondary">👥 {appliedFilters.aforo} invitados</Badge>
+                   )}
+                 </div>
               </CardContent>
             </Card>
           )}

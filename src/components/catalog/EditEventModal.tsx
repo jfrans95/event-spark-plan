@@ -56,7 +56,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {getAllSpaceTypes().map((space) => (
-                  <SelectItem key={space.value} value={space.label}>
+                  <SelectItem key={space.value} value={space.value}>
                     {space.icon} {space.label}
                   </SelectItem>
                 ))}
@@ -87,7 +87,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {getAllEventTypes().map((event) => (
-                  <SelectItem key={event.value} value={event.label}>
+                  <SelectItem key={event.value} value={event.value}>
                     {event.icon} {event.label}
                   </SelectItem>
                 ))}
@@ -107,7 +107,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {PLAN_TYPES.map((plan) => (
-                  <SelectItem key={plan.value} value={plan.label}>
+                  <SelectItem key={plan.value} value={plan.value}>
                     {plan.label}
                   </SelectItem>
                 ))}
