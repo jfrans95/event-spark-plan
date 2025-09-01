@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { mapSpaceTypeToDatabase, mapEventTypeToDatabase, mapPlanToDatabase } from "@/utils/eventDesignerMapping";
 
 interface EventDesignerData {
   spaceType: string;
@@ -17,7 +18,7 @@ export const EventDesigner = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [formData, setFormData] = useState<EventDesignerData>({
     spaceType: "",
-    guestCount: 50,
+    guestCount: 0, // No default value
     eventType: "",
     plan: ""
   });
@@ -100,7 +101,7 @@ const plans = ["Básico", "Pro", "Premium"];
       case 'spaceType':
         return value || "Tipo de lugar";
       case 'guestCount':
-        return `${value} invitados`;
+        return formData.guestCount > 0 ? `${value} invitados` : "Cantidad de invitados";
       case 'eventType':
         return value || "Tipo de eventos";
       case 'plan':
@@ -111,7 +112,7 @@ const plans = ["Básico", "Pro", "Premium"];
   };
 
   const isFormComplete = () => {
-    return formData.spaceType && formData.eventType && formData.plan;
+    return formData.spaceType && formData.guestCount > 0 && formData.eventType && formData.plan;
   };
 
   return (
@@ -177,7 +178,7 @@ const plans = ["Básico", "Pro", "Premium"];
               <div className="p-4 border rounded-lg bg-background">
                 <div className="space-y-4">
                   <div className="text-center text-sm font-medium">
-                    {formData.guestCount} invitados
+                    {formData.guestCount > 0 ? `${formData.guestCount} invitados` : "Selecciona cantidad de invitados"}
                   </div>
                   <Slider
                     value={[formData.guestCount]}
@@ -270,10 +271,10 @@ const plans = ["Básico", "Pro", "Premium"];
           disabled={!isFormComplete()}
           onClick={() => {
             const params = new URLSearchParams({
-              space: formData.spaceType,
-              event: formData.eventType,
-              plan: formData.plan.toLowerCase(),
-              guests: String(formData.guestCount),
+              espacio: mapSpaceTypeToDatabase(formData.spaceType),
+              evento: mapEventTypeToDatabase(formData.eventType),
+              plan: mapPlanToDatabase(formData.plan),
+              aforo: String(formData.guestCount),
             });
             navigate(`/catalog?${params.toString()}`);
           }}

@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { PackageCarousel } from "@/components/PackageCarousel";
 import { EventFilters } from "@/components/EventFilters";
 import { Footer } from "@/components/Footer";
+import { createDemoSeed } from "@/utils/seedDemo";
 
 interface EventFilters {
   spaceType: string;
@@ -13,10 +16,12 @@ interface EventFilters {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
+  const [isCreatingSeed, setIsCreatingSeed] = useState(false);
   const [filters, setFilters] = useState<EventFilters>({
     spaceType: "",
-    guestCount: 50,
+    guestCount: 0, // No default value
     eventType: "",
     plan: ""
   });
@@ -32,7 +37,18 @@ const Index = () => {
       evento: filters.eventType,
       plan: filters.plan
     });
-    window.location.href = `/catalog?${params.toString()}`;
+    navigate(`/catalog?${params.toString()}`);
+  };
+
+  const handleCreateSeed = async () => {
+    setIsCreatingSeed(true);
+    try {
+      await createDemoSeed();
+    } catch (error) {
+      console.error('Failed to create seed data:', error);
+    } finally {
+      setIsCreatingSeed(false);
+    }
   };
 
   return (
@@ -50,6 +66,18 @@ const Index = () => {
                   onFiltersChange={handleFiltersChange}
                   onStartDesign={handleStartDesign}
                 />
+                
+                {/* Temporary test button */}
+                <div className="mt-4 text-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCreateSeed}
+                    disabled={isCreatingSeed}
+                    size="sm"
+                  >
+                    {isCreatingSeed ? 'Creating Demo Data...' : 'Test: Create Demo Data'}
+                  </Button>
+                </div>
               </div>
             </div>
           </section>

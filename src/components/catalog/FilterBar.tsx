@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { GuestSelector } from "@/components/ui/guest-selector";
@@ -16,10 +16,10 @@ const FilterBar = () => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
-  // Ensure default params exist
+  // Remove default guest count assignment
   useEffect(() => {
     const next = new URLSearchParams(params);
-    if (!next.get("aforo")) next.set("aforo", "50");
+    // Don't set default aforo anymore
     setParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

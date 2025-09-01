@@ -76,7 +76,7 @@ export const useProducts = (filters?: ProductFilters) => {
           query = query.contains('event_types', [filters.evento]);
         }
 
-        if (filters?.plan) {
+        if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
           query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
         }
 

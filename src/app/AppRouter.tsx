@@ -4,6 +4,7 @@ import Partners from "@/pages/Partners";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import SeedAdmin from "@/pages/SeedAdmin";
+import SeedDemo from "@/pages/SeedDemo";
 import Catalog from "@/pages/Catalog";
 import Track from "@/pages/Track";
 import NotFound from "@/pages/NotFound";
@@ -42,6 +43,7 @@ export const AppRouter = () => {
       <Route path="/catalog" element={<Catalog />} />
       <Route path="/track/:code" element={<Track />} />
       <Route path="/seed-admin" element={<SeedAdmin />} />
+      <Route path="/seed-demo" element={<SeedDemo />} />
       
       {/* Provider public routes */}
       <Route path="/proveedor/registro" element={<ProviderRegistration />} />

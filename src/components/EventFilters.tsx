@@ -83,6 +83,7 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
             onChange={(value) => updateFilter("guestCount", value)}
             variant="inline"
             className="justify-center"
+            placeholder="Cantidad de invitados"
           />
         </div>
 
