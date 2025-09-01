@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { GuestSelector } from "@/components/ui/guest-selector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +19,7 @@ const FilterBar = () => {
   // Ensure default params exist
   useEffect(() => {
     const next = new URLSearchParams(params);
-    if (!next.get("guests")) next.set("guests", "50");
+    if (!next.get("aforo")) next.set("aforo", "50");
     setParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -26,6 +27,12 @@ const FilterBar = () => {
   const onChange = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value); else next.delete(key);
+    setParams(next);
+  };
+
+  const onGuestCountChange = (value: number) => {
+    const next = new URLSearchParams(params);
+    next.set("aforo", String(value));
     setParams(next);
   };
 
@@ -48,11 +55,11 @@ const FilterBar = () => {
     setParams(next);
   };
 
-  const currentSpaceTypes = params.get("space")?.split(',') || [];
-  const currentEventTypes = params.get("event")?.split(',') || [];
+  const currentSpaceTypes = params.get("espacio")?.split(',') || [];
+  const currentEventTypes = params.get("evento")?.split(',') || [];
   
   // Check if we have active filters from EventDesigner
-  const hasActiveFilters = !!(params.get("space") || params.get("event") || params.get("plan"));
+  const hasActiveFilters = !!(params.get("espacio") || params.get("evento") || params.get("plan"));
   
   const clearAllFilters = () => {
     setParams(new URLSearchParams());
@@ -60,14 +67,14 @@ const FilterBar = () => {
   
   const removeFilter = (key: string, value?: string) => {
     const next = new URLSearchParams(params);
-    if (value && key === "space") {
+    if (value && key === "espacio") {
       const current = next.get(key)?.split(',').filter(v => v !== value) || [];
       if (current.length > 0) {
         next.set(key, current.join(','));
       } else {
         next.delete(key);
       }
-    } else if (value && key === "event") {
+    } else if (value && key === "evento") {
       const current = next.get(key)?.split(',').filter(v => v !== value) || [];
       if (current.length > 0) {
         next.set(key, current.join(','));
@@ -81,16 +88,16 @@ const FilterBar = () => {
   };
 
   const designEvent = () => {
-    const space = params.get("space");
-    const event = params.get("event");
+    const espacio = params.get("espacio");
+    const evento = params.get("evento");
     const plan = params.get("plan");
-    const guests = params.get("guests") || "50";
+    const aforo = params.get("aforo") || "50";
     
     const designParams = new URLSearchParams({
-      space: space || "",
-      event: event || "",
+      espacio: espacio || "",
+      evento: evento || "",
       plan: plan || "",
-      guests: guests,
+      aforo: aforo,
     });
     navigate(`/catalog?${designParams.toString()}`);
     setIsExpanded(false);
@@ -115,21 +122,21 @@ const FilterBar = () => {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            {params.get("space") && (
+            {params.get("espacio") && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                📍 {params.get("space")}
+                📍 {params.get("espacio")}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:bg-muted rounded" 
-                  onClick={() => removeFilter("space")}
+                  onClick={() => removeFilter("espacio")}
                 />
               </Badge>
             )}
-            {params.get("event") && (
+            {params.get("evento") && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                🎉 {params.get("event")}
+                🎉 {params.get("evento")}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:bg-muted rounded" 
-                  onClick={() => removeFilter("event")}
+                  onClick={() => removeFilter("evento")}
                 />
               </Badge>
             )}
@@ -142,12 +149,12 @@ const FilterBar = () => {
                 />
               </Badge>
             )}
-            {params.get("guests") && (
+            {params.get("aforo") && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                👥 {params.get("guests")} invitados
+                👥 {params.get("aforo")} invitados
                 <X 
                   className="h-3 w-3 cursor-pointer hover:bg-muted rounded" 
-                  onClick={() => removeFilter("guests")}
+                  onClick={() => removeFilter("aforo")}
                 />
               </Badge>
             )}
@@ -171,15 +178,11 @@ const FilterBar = () => {
       <CardContent className="p-4 space-y-4">
         {/* Guest Count */}
         <div className="space-y-1">
-          <Label htmlFor="guests">Nº personas</Label>
-          <Input 
-            id="guests" 
-            type="number" 
-            min={20} 
-            max={500} 
-            step={10} 
-            value={params.get("guests") || "50"} 
-            onChange={(e) => onChange("guests", e.target.value)} 
+          <Label>Cantidad de invitados</Label>
+          <GuestSelector
+            value={params.get("aforo") ? parseInt(params.get("aforo")!) : null}
+            onChange={onGuestCountChange}
+            variant="inline"
           />
         </div>
 
@@ -210,7 +213,7 @@ const FilterBar = () => {
                   id={space.value}
                   checked={currentSpaceTypes.includes(space.value)}
                   onCheckedChange={(checked) => 
-                    onMultipleChange("space", space.value, checked as boolean)
+                    onMultipleChange("espacio", space.value, checked as boolean)
                   }
                 />
                 <Label htmlFor={space.value} className="text-sm">
@@ -231,7 +234,7 @@ const FilterBar = () => {
                   id={event.value}
                   checked={currentEventTypes.includes(event.value)}
                   onCheckedChange={(checked) => 
-                    onMultipleChange("event", event.value, checked as boolean)
+                    onMultipleChange("evento", event.value, checked as boolean)
                   }
                 />
                 <Label htmlFor={event.value} className="text-sm">

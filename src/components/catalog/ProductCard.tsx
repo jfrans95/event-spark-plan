@@ -14,9 +14,6 @@ const ProductCard = ({ product, onAdd }: Props) => {
       <CardContent className="p-4 space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="font-medium">{product.name}</h3>
-          {product.isCoordinator && (
-            <span className="text-xs text-primary">Coordinador</span>
-          )}
         </div>
         {product.description && (
           <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>

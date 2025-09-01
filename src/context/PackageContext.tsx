@@ -16,22 +16,27 @@ export interface Product {
   price: number; // COP
   category: Category;
   images?: string[];
-  isCoordinator?: boolean;
+  // Database fields for filtering
+  space_types?: string[];
+  capacity_min?: number;
+  capacity_max?: number;
+  event_types?: string[];
+  plan?: string;
+  activo?: boolean;
 }
 
 export interface PackageItem {
   product: Product;
-  qty: number;
+  quantity: number; // Changed from qty to quantity
 }
 
 interface PackageContextValue {
   items: PackageItem[];
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
-  updateQty: (productId: string, qty: number) => void;
+  updateQty: (productId: string, quantity: number) => void;
   clear: () => void;
   total: number;
-  hasCoordinator: boolean;
   groupedByCategory: Record<Category, PackageItem[]>;
 }
 
@@ -62,10 +67,10 @@ export const PackageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const idx = prev.findIndex((i) => i.product.id === product.id);
       if (idx >= 0) {
         const clone = [...prev];
-        clone[idx] = { ...clone[idx], qty: clone[idx].qty + 1 };
+        clone[idx] = { ...clone[idx], quantity: clone[idx].quantity + 1 };
         return clone;
       }
-      return [...prev, { product, qty: 1 }];
+      return [...prev, { product, quantity: 1 }];
     });
   };
 
@@ -73,14 +78,17 @@ export const PackageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setItems((prev) => prev.filter((i) => i.product.id !== productId));
   };
 
-  const updateQty = (productId: string, qty: number) => {
-    setItems((prev) => prev.map((i) => (i.product.id === productId ? { ...i, qty: Math.max(1, qty) } : i)));
+  const updateQty = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeItem(productId);
+      return;
+    }
+    setItems((prev) => prev.map((i) => (i.product.id === productId ? { ...i, quantity } : i)));
   };
 
   const clear = () => setItems([]);
 
-  const total = useMemo(() => items.reduce((sum, i) => sum + i.product.price * i.qty, 0), [items]);
-  const hasCoordinator = useMemo(() => items.some((i) => i.product.isCoordinator), [items]);
+  const total = useMemo(() => items.reduce((sum, i) => sum + i.product.price * i.quantity, 0), [items]);
 
   const groupedByCategory = useMemo(() => {
     const groups = {
@@ -105,7 +113,6 @@ export const PackageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateQty,
     clear,
     total,
-    hasCoordinator,
     groupedByCategory,
   };
 

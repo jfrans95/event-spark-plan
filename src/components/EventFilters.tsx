@@ -17,6 +17,7 @@ interface EventFiltersProps {
   onStartDesign: () => void;
 }
 
+import { GuestSelector } from "@/components/ui/guest-selector";
 import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES, getAllSpaceTypes, getAllEventTypes } from "@/constants/productTags";
 
 const FEATURED_SPACES = getAllSpaceTypes().slice(0, 5);
@@ -30,7 +31,7 @@ const FEATURED_EVENT_CATEGORIES = {
 export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersProps) => {
   const [filters, setFilters] = useState<EventFilters>({
     spaceType: "",
-    guestCount: 50,
+    guestCount: 0, // No default value
     eventType: "",
     plan: ""
   });
@@ -75,20 +76,14 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-medium">
             <Users className="h-4 w-4" />
-            Número de Invitados: {filters.guestCount}
+            Cantidad de invitados
           </label>
-          <Slider
-            value={[filters.guestCount]}
-            onValueChange={([value]) => updateFilter("guestCount", value)}
-            max={500}
-            min={20}
-            step={20}
-            className="w-full"
+          <GuestSelector
+            value={filters.guestCount || null}
+            onChange={(value) => updateFilter("guestCount", value)}
+            variant="inline"
+            className="justify-center"
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>20</span>
-            <span>500+</span>
-          </div>
         </div>
 
         {/* Tipo de Evento */}
@@ -143,6 +138,7 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
           onClick={onStartDesign}
           className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
           size="lg"
+          disabled={!filters.spaceType || !filters.guestCount || !filters.eventType || !filters.plan}
         >
           Diseñar Mi Evento
         </Button>

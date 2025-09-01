@@ -26,8 +26,13 @@ const Index = () => {
   };
 
   const handleStartDesign = () => {
-    console.log("Starting event design with filters:", filters);
-    // TODO: Navigate to event designer
+    const params = new URLSearchParams({
+      espacio: filters.spaceType,
+      aforo: String(filters.guestCount),
+      evento: filters.eventType,
+      plan: filters.plan
+    });
+    window.location.href = `/catalog?${params.toString()}`;
   };
 
   return (

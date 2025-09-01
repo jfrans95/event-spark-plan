@@ -8,7 +8,7 @@ interface Props {
 }
 
 const PackageSidebar = ({ onQuote }: Props) => {
-  const { groupedByCategory, removeItem, updateQty, total, hasCoordinator } = usePackage();
+  const { groupedByCategory, removeItem, updateQty, total } = usePackage();
 
   return (
     <Card className="sticky top-20">
@@ -29,14 +29,14 @@ const PackageSidebar = ({ onQuote }: Props) => {
                       <div key={i.product.id} className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm truncate">{i.product.name}</p>
-                          <p className="text-xs text-muted-foreground">${(i.product.price * i.qty).toLocaleString("es-CO")} COP</p>
+                          <p className="text-xs text-muted-foreground">${(i.product.price * i.quantity).toLocaleString("es-CO")} COP</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <input
                             aria-label={`Cantidad de ${i.product.name}`}
                             type="number"
                             min={1}
-                            value={i.qty}
+                            value={i.quantity}
                             onChange={(e) => updateQty(i.product.id, parseInt(e.target.value || "1", 10))}
                             className="w-16 rounded-md border bg-background px-2 py-1 text-sm"
                           />
@@ -53,12 +53,9 @@ const PackageSidebar = ({ onQuote }: Props) => {
               <span className="text-sm text-muted-foreground">Total estimado</span>
               <strong>${total.toLocaleString("es-CO")} COP</strong>
             </div>
-            <Button className="w-full" onClick={onQuote} disabled={!hasCoordinator}>
+            <Button className="w-full" onClick={onQuote}>
               Hacer cotización
             </Button>
-            {!hasCoordinator && (
-              <p className="text-xs text-destructive">Debe incluir al menos 1 Coordinador de evento.</p>
-            )}
           </div>
         )}
       </CardContent>

@@ -32,7 +32,7 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         time: formData.get("time"),
         location: formData.get("location"),
       },
-      items: items.map((i) => ({ id: i.product.id, name: i.product.name, qty: i.qty, price: i.product.price })),
+      items: items.map((i) => ({ id: i.product.id, name: i.product.name, qty: i.quantity, price: i.product.price })),
       total,
     };
 

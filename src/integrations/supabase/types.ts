@@ -16,8 +16,10 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          activo: boolean
           capacity_max: number
           capacity_min: number
+          categoria: Database["public"]["Enums"]["category_type"]
           created_at: string
           description: string | null
           event_types: Database["public"]["Enums"]["event_type"][] | null
@@ -31,8 +33,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activo?: boolean
           capacity_max?: number
           capacity_min?: number
+          categoria?: Database["public"]["Enums"]["category_type"]
           created_at?: string
           description?: string | null
           event_types?: Database["public"]["Enums"]["event_type"][] | null
@@ -46,8 +50,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activo?: boolean
           capacity_max?: number
           capacity_min?: number
+          categoria?: Database["public"]["Enums"]["category_type"]
           created_at?: string
           description?: string | null
           event_types?: Database["public"]["Enums"]["event_type"][] | null
@@ -221,6 +227,14 @@ export type Database = {
         | "provider"
         | "admin"
         | "advisor"
+      category_type:
+        | "montaje_tecnico"
+        | "decoracion_ambientacion"
+        | "catering"
+        | "mixologia_cocteleria"
+        | "arte_cultura"
+        | "audiovisuales"
+        | "mobiliario"
       event_type:
         | "celebraciones_internas"
         | "activaciones_marca"
@@ -397,6 +411,15 @@ export const Constants = {
         "provider",
         "admin",
         "advisor",
+      ],
+      category_type: [
+        "montaje_tecnico",
+        "decoracion_ambientacion",
+        "catering",
+        "mixologia_cocteleria",
+        "arte_cultura",
+        "audiovisuales",
+        "mobiliario",
       ],
       event_type: [
         "celebraciones_internas",
