@@ -156,7 +156,7 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="outline" onClick={() => navigate("/logout")}>
               <LogOut className="w-4 h-4 mr-2" />
               Cerrar Sesión
             </Button>
