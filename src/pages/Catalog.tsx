@@ -2,15 +2,17 @@ import { useMemo, useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePackage, Product, Category } from "@/context/PackageContext";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/catalog/ProductCard";
 import PackageSidebar from "@/components/catalog/PackageSidebar";
 import QuoteModal from "@/components/catalog/QuoteModal";
-import FilterBar from "@/components/catalog/FilterBar";
-import { Loader2, AlertCircle } from "lucide-react";
+import EditEventModal from "@/components/catalog/EditEventModal";
+import { Loader2, AlertCircle, Edit, Package } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 
 const CATEGORIES: Category[] = [
   "Montaje técnico",
@@ -22,25 +24,60 @@ const CATEGORIES: Category[] = [
   "Mobiliario",
 ];
 
+interface Filters {
+  espacio?: string;
+  aforo?: number;
+  evento?: string;
+  plan?: string;
+}
+
 const Catalog = () => {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<Category>("Montaje técnico");
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [editEventOpen, setEditEventOpen] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(false);
   const { addItem } = usePackage();
 
-  // Get filters from URL params
-  const filters = useMemo(() => ({
+  // Applied filters (used for actual queries)
+  const appliedFilters = useMemo<Filters>(() => ({
     espacio: params.get("espacio") || undefined,
     aforo: params.get("aforo") ? parseInt(params.get("aforo")!) : undefined,
     evento: params.get("evento") || undefined,
     plan: params.get("plan") || undefined,
-    categoria: activeCategory
-  }), [params, activeCategory]);
+  }), [params]);
 
-  const { products, loading, error } = useProducts(filters);
+  // Draft filters (used for editing)
+  const [draftFilters, setDraftFilters] = useState<Filters>(appliedFilters);
+
+  // Update draft filters when applied filters change
+  useEffect(() => {
+    setDraftFilters(appliedFilters);
+  }, [appliedFilters]);
+
+  const mode = showAllProducts ? 'all' : 'filtered';
+  const { products, loading, error } = useProducts({
+    ...appliedFilters,
+    categoria: activeCategory
+  }, mode);
 
   // SEO basic
   if (typeof document !== "undefined") document.title = "Catálogo de productos | EventCraft";
+
+  const applyFilters = (newFilters: Filters) => {
+    const newParams = new URLSearchParams();
+    if (newFilters.espacio) newParams.set("espacio", newFilters.espacio);
+    if (newFilters.aforo) newParams.set("aforo", newFilters.aforo.toString());
+    if (newFilters.evento) newParams.set("evento", newFilters.evento);
+    if (newFilters.plan) newParams.set("plan", newFilters.plan);
+    
+    setParams(newParams);
+    setShowAllProducts(false);
+    setEditEventOpen(false);
+  };
+
+  const hasActiveFilters = !!(appliedFilters.espacio || appliedFilters.evento || appliedFilters.plan || appliedFilters.aforo);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => p.category === activeCategory);
@@ -50,16 +87,52 @@ const Catalog = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <FilterBar />
+          {/* Applied Filters Display */}
+          {hasActiveFilters && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">Filtros aplicados</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setEditEventOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Editar evento
+                  </Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {appliedFilters.espacio && (
+                    <Badge variant="secondary">📍 {appliedFilters.espacio}</Badge>
+                  )}
+                  {appliedFilters.evento && (
+                    <Badge variant="secondary">🎉 {appliedFilters.evento}</Badge>
+                  )}
+                  {appliedFilters.plan && (
+                    <Badge variant="secondary">💎 {appliedFilters.plan}</Badge>
+                  )}
+                  {appliedFilters.aforo && (
+                    <Badge variant="secondary">👥 {appliedFilters.aforo} invitados</Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Catálogo</CardTitle>
-              <CardDescription>
-                {params.get("espacio") || params.get("evento") || params.get("plan") ? 
+            <CardDescription>
+              {showAllProducts ? 
+                `Todos los productos de ${activeCategory}` :
+                hasActiveFilters ? 
                   "Productos filtrados según tu selección" : 
                   "Selecciona productos y arma tu paquete"
-                }
-              </CardDescription>
+              }
+            </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as Category)}>
@@ -87,23 +160,57 @@ const Catalog = () => {
                       </Alert>
                     ) : filteredProducts.length === 0 ? (
                       <div className="text-center py-12">
-                        <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No hay productos disponibles</h3>
+                        <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">
+                          {showAllProducts ? 
+                            `No hay productos en ${cat}` : 
+                            "No hay productos con estos filtros"
+                          }
+                        </h3>
                         <p className="text-muted-foreground mb-4">
-                          No encontramos productos en la categoría "{cat}" que coincidan con tus filtros.
+                          {showAllProducts ? 
+                            `Aún no hay productos registrados en la categoría "${cat}".` :
+                            `No encontramos productos en "${cat}" que coincidan con tus filtros.`
+                          }
                         </p>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => window.location.href = '/catalog'}
-                        >
-                          Ver todos los productos
-                        </Button>
+                        <div className="flex gap-2 justify-center">
+                          {!showAllProducts && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setShowAllProducts(true)}
+                            >
+                              Ver todos los productos
+                            </Button>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setEditEventOpen(true)}
+                          >
+                            Editar evento
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {filteredProducts.map((p) => (
-                          <ProductCard key={p.id} product={p} onAdd={() => addItem(p)} />
-                        ))}
+                      <div className="space-y-4">
+                        {showAllProducts && (
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground">
+                              Mostrando todos los productos ({filteredProducts.length})
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setShowAllProducts(false)}
+                            >
+                              Aplicar filtros
+                            </Button>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {filteredProducts.map((p) => (
+                            <ProductCard key={p.id} product={p} onAdd={() => addItem(p)} />
+                          ))}
+                        </div>
                       </div>
                     )}
                   </TabsContent>
@@ -119,6 +226,13 @@ const Catalog = () => {
       </div>
 
       <QuoteModal open={quoteOpen} onOpenChange={setQuoteOpen} />
+      <EditEventModal 
+        open={editEventOpen} 
+        onOpenChange={setEditEventOpen}
+        filters={draftFilters}
+        onFiltersChange={setDraftFilters}
+        onApply={applyFilters}
+      />
     </div>
   );
 };
