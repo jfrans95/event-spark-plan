@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { GuestSelector } from "@/components/ui/guest-selector";
 import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES } from "@/constants/productTags";
 
 interface EventDesignerData {
@@ -33,6 +33,10 @@ export const EventDesigner = () => {
   const selectOption = (field: keyof EventDesignerData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setActiveFilter(null);
+  };
+
+  const updateGuestCount = (value: number[]) => {
+    setFormData(prev => ({ ...prev, guestCount: value[0] }));
   };
 
   const getDisplayValue = (field: keyof EventDesignerData) => {
@@ -103,13 +107,44 @@ export const EventDesigner = () => {
 
           {/* Número de invitados */}
           <div className="space-y-3">
-            <GuestSelector
-              value={formData.guestCount || null}
-              onChange={(value) => setFormData(prev => ({ ...prev, guestCount: value }))}
-              variant="button"
-              className="w-full"
-              placeholder="👥 Cantidad de invitados"
-            />
+            <Button 
+              variant="outline" 
+              className="w-full justify-between"
+              onClick={() => toggleFilter('guestCount')}
+            >
+              <span>👥 {getDisplayValue('guestCount')}</span>
+              {activeFilter === 'guestCount' ? 
+                <ChevronUp className="w-4 h-4" /> : 
+                <ChevronDown className="w-4 h-4" />
+              }
+            </Button>
+            
+            {activeFilter === 'guestCount' && (
+              <div className="p-4 border rounded-lg bg-background">
+                <div className="space-y-4">
+                  <div className="text-center text-sm font-medium">
+                    {formData.guestCount > 0 ? `${formData.guestCount} invitados` : "Selecciona cantidad de invitados"}
+                  </div>
+                  <Slider
+                    value={[formData.guestCount]}
+                    onValueChange={updateGuestCount}
+                    max={500}
+                    min={20}
+                    step={10}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>20</span>
+                    <span>100</span>
+                    <span>300</span>
+                    <span>500</span>
+                  </div>
+                  <div className="text-xs text-center text-muted-foreground">
+                    Pasos: 20-100 (cada 20) • 100-300 (cada 50) • 300-500 (cada 100)
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tipo de evento */}
