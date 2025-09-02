@@ -124,6 +124,7 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
         console.log('Query executed. Error:', fetchError);
 
         if (fetchError) {
+          console.error('Supabase query error:', fetchError);
           throw fetchError;
         }
 
