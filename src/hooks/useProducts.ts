@@ -69,6 +69,18 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
 
         console.log('Base query created');
 
+        // Apply category filter always (even in 'all' mode we filter by category)
+        if (filters?.categoria) {
+          console.log('Adding categoria filter:', filters.categoria);
+          // Convert display category back to db enum
+          const dbCategoria = Object.entries(categoryMap)
+            .find(([_, displayName]) => displayName === filters.categoria)?.[0];
+          console.log('DB categoria:', dbCategoria);
+          if (dbCategoria) {
+            query = query.eq('categoria', dbCategoria as 'montaje_tecnico' | 'decoracion_ambientacion' | 'catering' | 'mixologia_cocteleria' | 'arte_cultura' | 'audiovisuales' | 'mobiliario');
+          }
+        }
+
         // Apply filters only in 'filtered' mode - strict AND logic
         if (mode === 'filtered') {
           console.log('Applying filters in filtered mode...');
@@ -93,21 +105,16 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
             query = query.contains('event_types', [filters.evento]);
           }
 
-          // Plan filter: product must match exact plan
+          // Plan filter: inclusive hierarchy (premium > pro > basico)
           if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
             console.log('Adding plan filter:', filters.plan);
-            query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
-          }
-        }
-
-        if (filters?.categoria) {
-          console.log('Adding categoria filter:', filters.categoria);
-          // Convert display category back to db enum
-          const dbCategoria = Object.entries(categoryMap)
-            .find(([_, displayName]) => displayName === filters.categoria)?.[0];
-          console.log('DB categoria:', dbCategoria);
-          if (dbCategoria) {
-            query = query.eq('categoria', dbCategoria as 'montaje_tecnico' | 'decoracion_ambientacion' | 'catering' | 'mixologia_cocteleria' | 'arte_cultura' | 'audiovisuales' | 'mobiliario');
+            if (filters.plan === 'basico') {
+              query = query.eq('plan', 'basico');
+            } else if (filters.plan === 'pro') {
+              query = query.in('plan', ['basico', 'pro']);
+            } else if (filters.plan === 'premium') {
+              query = query.in('plan', ['basico', 'pro', 'premium']);
+            }
           }
         }
 

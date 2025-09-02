@@ -36,6 +36,8 @@ import ProviderWrapper from "@/components/ProviderWrapper";
 import ProviderRegistration from "@/pages/ProviderRegistration";
 import ProviderApplicationPending from "@/pages/ProviderApplicationPending";
 
+import EditarProducto from "@/pages/dashboard/provider/EditarProducto";
+
 export const AppRouter = () => {
   return (
     <Routes>
@@ -162,6 +164,17 @@ export const AppRouter = () => {
             <ProviderLayout>
               <ProviderWrapper>
                 <AgregarProducto />
+              </ProviderWrapper>
+            </ProviderLayout>
+          </RoleRoute>
+        </PrivateRoute>
+      } />
+      <Route path="/dashboard/proveedor/editar-producto/:productId" element={
+        <PrivateRoute>
+          <RoleRoute allowed={['provider']}>
+            <ProviderLayout>
+              <ProviderWrapper>
+                <EditarProducto />
               </ProviderWrapper>
             </ProviderLayout>
           </RoleRoute>
