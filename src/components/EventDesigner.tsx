@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { mapSpaceTypeToDatabase, mapEventTypeToDatabase, mapPlanToDatabase } from "@/utils/eventDesignerMapping";
+import { GuestSelector } from "@/components/ui/guest-selector";
+import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES } from "@/constants/productTags";
 
 interface EventDesignerData {
   spaceType: string;
@@ -23,45 +23,7 @@ export const EventDesigner = () => {
     plan: ""
   });
 
-  const spaceTypes = [
-    {
-      category: "🌿 Espacios Abiertos / Aire libre",
-      options: ["Parques públicos", "Jardín Botánico", "Miradores Naturales", "Playas", "Plazoletas", "Calles Barrios"]
-    },
-    {
-      category: "🏢 Espacios Cerrados",
-      options: ["Salón de Eventos", "Teatros", "Auditorios", "Centros convenciones", "Discotecas", "Restaurantes privados", "Iglesias templos", "Galerías museos"]
-    },
-    {
-      category: "🔀 Espacios No Convencionales",
-      options: ["Bodegas", "Casas Patrimoniales", "Rooftops", "Locales en desuso", "Estudios", "Fincas privadas"]
-    },
-    {
-      category: "🏠 Casas Familiares",
-      options: ["Casas familiares", "Unidades Residenciales", "Casas patio jardín", "Viviendas adecuadas"]
-    },
-    {
-      category: "🚚 Espacios Móviles / Temporales",
-      options: ["Carpas", "Contenedores"]
-    }
-  ];
-
-  const eventTypes = [
-    {
-      category: "📊 Eventos Corporativos",
-      options: ["Celebraciones internas", "Activaciones de marca", "Team building", "Cierre de año"]
-    },
-    {
-      category: "🥂 Eventos Sociales",
-      options: ["Cumpleaños", "Día madre padre", "Fechas religiosas", "Graduaciones", "Reuniones especiales"]
-    },
-    {
-      category: "🎭 Eventos Culturales (Institucionales)",
-      options: ["Eventos pequeños", "Eventos medios", "Eventos institucionales", "Encuentros públicos", "Lanzamientos aniversarios"]
-    }
-  ];
-
-const plans = ["Básico", "Pro", "Premium"];
+  // Use the same constants as the rest of the app for consistency
   const navigate = useNavigate();
 
   const toggleFilter = (filterName: string) => {
@@ -71,27 +33,6 @@ const plans = ["Básico", "Pro", "Premium"];
   const selectOption = (field: keyof EventDesignerData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setActiveFilter(null);
-  };
-
-  const updateGuestCount = (value: number[]) => {
-    setFormData(prev => ({ ...prev, guestCount: value[0] }));
-  };
-
-  const getGuestCountMarks = () => {
-    const marks = [];
-    // 20 en 20 hasta 100
-    for (let i = 20; i <= 100; i += 20) {
-      marks.push(i);
-    }
-    // 50 en 50 hasta 300
-    for (let i = 150; i <= 300; i += 50) {
-      marks.push(i);
-    }
-    // 100 en 100 hasta 500
-    for (let i = 400; i <= 500; i += 100) {
-      marks.push(i);
-    }
-    return marks;
   };
 
   const getDisplayValue = (field: keyof EventDesignerData) => {
@@ -140,18 +81,18 @@ const plans = ["Básico", "Pro", "Premium"];
             
             {activeFilter === 'spaceType' && (
               <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                {spaceTypes.map((group, groupIndex) => (
-                  <div key={groupIndex} className="p-2">
+                {Object.entries(SPACE_TYPES).map(([category, options]) => (
+                  <div key={category} className="p-2">
                     <div className="text-xs font-medium text-muted-foreground px-2 py-1">
-                      {group.category}
+                      {category}
                     </div>
-                    {group.options.map((option, optionIndex) => (
+                    {options.map((option) => (
                       <button
-                        key={optionIndex}
+                        key={option.value}
                         className="w-full text-left px-2 py-1 text-sm hover:bg-muted rounded transition-colors"
-                        onClick={() => selectOption('spaceType', option)}
+                        onClick={() => selectOption('spaceType', option.value)}
                       >
-                        {option}
+                        {option.icon} {option.label}
                       </button>
                     ))}
                   </div>
@@ -162,39 +103,13 @@ const plans = ["Básico", "Pro", "Premium"];
 
           {/* Número de invitados */}
           <div className="space-y-3">
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              onClick={() => toggleFilter('guestCount')}
-            >
-              <span>👥 {getDisplayValue('guestCount')}</span>
-              {activeFilter === 'guestCount' ? 
-                <ChevronUp className="w-4 h-4" /> : 
-                <ChevronDown className="w-4 h-4" />
-              }
-            </Button>
-            
-            {activeFilter === 'guestCount' && (
-              <div className="p-4 border rounded-lg bg-background">
-                <div className="space-y-4">
-                  <div className="text-center text-sm font-medium">
-                    {formData.guestCount > 0 ? `${formData.guestCount} invitados` : "Selecciona cantidad de invitados"}
-                  </div>
-                  <Slider
-                    value={[formData.guestCount]}
-                    onValueChange={updateGuestCount}
-                    max={500}
-                    min={20}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>20</span>
-                    <span>500</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            <GuestSelector
+              value={formData.guestCount || null}
+              onChange={(value) => setFormData(prev => ({ ...prev, guestCount: value }))}
+              variant="button"
+              className="w-full"
+              placeholder="👥 Cantidad de invitados"
+            />
           </div>
 
           {/* Tipo de evento */}
@@ -213,18 +128,18 @@ const plans = ["Básico", "Pro", "Premium"];
             
             {activeFilter === 'eventType' && (
               <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                {eventTypes.map((group, groupIndex) => (
-                  <div key={groupIndex} className="p-2">
+                {Object.entries(EVENT_TYPES).map(([category, options]) => (
+                  <div key={category} className="p-2">
                     <div className="text-xs font-medium text-muted-foreground px-2 py-1">
-                      {group.category}
+                      {category}
                     </div>
-                    {group.options.map((option, optionIndex) => (
+                    {options.map((option) => (
                       <button
-                        key={optionIndex}
+                        key={option.value}
                         className="w-full text-left px-2 py-1 text-sm hover:bg-muted rounded transition-colors"
-                        onClick={() => selectOption('eventType', option)}
+                        onClick={() => selectOption('eventType', option.value)}
                       >
-                        {option}
+                        {option.icon} {option.label}
                       </button>
                     ))}
                   </div>
@@ -250,14 +165,14 @@ const plans = ["Básico", "Pro", "Premium"];
             {activeFilter === 'plan' && (
               <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-lg shadow-lg">
                 <div className="p-2">
-                  {plans.map((plan, index) => (
+                  {PLAN_TYPES.map((plan) => (
                     <button
-                      key={index}
+                      key={plan.value}
                       className="w-full text-left px-2 py-2 text-sm hover:bg-muted rounded transition-colors flex items-center justify-between"
-                      onClick={() => selectOption('plan', plan)}
+                      onClick={() => selectOption('plan', plan.value)}
                     >
-                      <span>{plan}</span>
-                      {plan === 'Premium' && <Badge variant="secondary" className="text-xs">Recomendado</Badge>}
+                      <span>{plan.label}</span>
+                      {plan.value === 'premium' && <Badge variant="secondary" className="text-xs">Recomendado</Badge>}
                     </button>
                   ))}
                 </div>
@@ -271,9 +186,9 @@ const plans = ["Básico", "Pro", "Premium"];
           disabled={!isFormComplete()}
           onClick={() => {
             const params = new URLSearchParams({
-              espacio: mapSpaceTypeToDatabase(formData.spaceType),
-              evento: mapEventTypeToDatabase(formData.eventType),
-              plan: mapPlanToDatabase(formData.plan),
+              espacio: formData.spaceType,
+              evento: formData.eventType,
+              plan: formData.plan,
               aforo: String(formData.guestCount),
             });
             navigate(`/catalog?${params.toString()}`);
