@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GuestSelector } from "@/components/ui/guest-selector";
+import { GuestSlider } from "@/components/ui/guest-slider";
 import { getAllSpaceTypes, getAllEventTypes, PLAN_TYPES } from "@/constants/productTags";
 
 interface Filters {
@@ -67,11 +67,9 @@ const EditEventModal = ({
           {/* Cantidad de Invitados */}
           <div className="space-y-2">
             <Label>Cantidad de Invitados</Label>
-            <GuestSelector
+            <GuestSlider
               value={filters.aforo || null}
               onChange={(value) => onFiltersChange({ ...filters, aforo: value })}
-              variant="inline"
-              placeholder="Selecciona cantidad"
             />
           </div>
 

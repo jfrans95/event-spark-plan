@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
+import { GuestSlider } from "@/components/ui/guest-slider";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -35,8 +35,11 @@ export const EventDesigner = () => {
     setActiveFilter(null);
   };
 
-  const updateGuestCount = (value: number[]) => {
-    setFormData(prev => ({ ...prev, guestCount: value[0] }));
+  const updateGuestCount = (value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      guestCount: value
+    }));
   };
 
   const getDisplayValue = (field: keyof EventDesignerData) => {
@@ -121,28 +124,10 @@ export const EventDesigner = () => {
             
             {activeFilter === 'guestCount' && (
               <div className="p-4 border rounded-lg bg-background">
-                <div className="space-y-4">
-                  <div className="text-center text-sm font-medium">
-                    {formData.guestCount > 0 ? `${formData.guestCount} invitados` : "Selecciona cantidad de invitados"}
-                  </div>
-                  <Slider
-                    value={[formData.guestCount]}
-                    onValueChange={updateGuestCount}
-                    max={500}
-                    min={20}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>20</span>
-                    <span>100</span>
-                    <span>300</span>
-                    <span>500</span>
-                  </div>
-                  <div className="text-xs text-center text-muted-foreground">
-                    Pasos: 20-100 (cada 20) • 100-300 (cada 50) • 300-500 (cada 100)
-                  </div>
-                </div>
+                <GuestSlider
+                  value={formData.guestCount || null}
+                  onChange={updateGuestCount}
+                />
               </div>
             )}
           </div>

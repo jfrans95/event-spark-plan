@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
+
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Calendar, Star } from "lucide-react";
 
@@ -17,7 +17,7 @@ interface EventFiltersProps {
   onStartDesign: () => void;
 }
 
-import { GuestSelector } from "@/components/ui/guest-selector";
+import { GuestSlider } from "@/components/ui/guest-slider";
 import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES, getAllSpaceTypes, getAllEventTypes } from "@/constants/productTags";
 
 const FEATURED_SPACES = getAllSpaceTypes().slice(0, 5);
@@ -78,12 +78,9 @@ export const EventFilters = ({ onFiltersChange, onStartDesign }: EventFiltersPro
             <Users className="h-4 w-4" />
             Cantidad de invitados
           </label>
-          <GuestSelector
+          <GuestSlider
             value={filters.guestCount || null}
             onChange={(value) => updateFilter("guestCount", value)}
-            variant="inline"
-            className="justify-center"
-            placeholder="Cantidad de invitados"
           />
         </div>
 
