@@ -48,6 +48,10 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
         setLoading(true);
         setError(null);
 
+        console.log('=== QUERY DEBUG ===');
+        console.log('Mode:', mode);
+        console.log('Filters received:', filters);
+        
         let query = supabase
           .from('products')
           .select(`
@@ -63,15 +67,21 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
           .eq('activo', true)
           .eq('provider_profiles.provider_applications.status', 'approved');
 
+        console.log('Base query created');
+
         // Apply filters only in 'filtered' mode - strict AND logic
         if (mode === 'filtered') {
+          console.log('Applying filters in filtered mode...');
+          
           // Espacio filter: product must support this space type
           if (filters?.espacio) {
+            console.log('Adding espacio filter:', filters.espacio);
             query = query.contains('space_types', [filters.espacio]);
           }
 
           // Aforo filter: product capacity range must include the guest count
           if (filters?.aforo) {
+            console.log('Adding aforo filter:', filters.aforo);
             query = query
               .lte('capacity_min', filters.aforo)  // min capacity <= guest count
               .gte('capacity_max', filters.aforo); // max capacity >= guest count
@@ -79,25 +89,32 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
 
           // Evento filter: product must support this event type
           if (filters?.evento) {
+            console.log('Adding evento filter:', filters.evento);
             query = query.contains('event_types', [filters.evento]);
           }
 
           // Plan filter: product must match exact plan
           if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
+            console.log('Adding plan filter:', filters.plan);
             query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
           }
         }
 
         if (filters?.categoria) {
+          console.log('Adding categoria filter:', filters.categoria);
           // Convert display category back to db enum
           const dbCategoria = Object.entries(categoryMap)
             .find(([_, displayName]) => displayName === filters.categoria)?.[0];
+          console.log('DB categoria:', dbCategoria);
           if (dbCategoria) {
             query = query.eq('categoria', dbCategoria as 'montaje_tecnico' | 'decoracion_ambientacion' | 'catering' | 'mixologia_cocteleria' | 'arte_cultura' | 'audiovisuales' | 'mobiliario');
           }
         }
 
+        console.log('About to execute query...');
         const { data, error: fetchError } = await query;
+        console.log('Query executed. Data:', data);
+        console.log('Query executed. Error:', fetchError);
 
         if (fetchError) {
           throw fetchError;
