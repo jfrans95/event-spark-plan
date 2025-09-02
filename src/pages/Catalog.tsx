@@ -9,7 +9,7 @@ import ProductCard from "@/components/catalog/ProductCard";
 import PackageSidebar from "@/components/catalog/PackageSidebar";
 import QuoteModal from "@/components/catalog/QuoteModal";
 import EditEventModal from "@/components/catalog/EditEventModal";
-import { Loader2, AlertCircle, Edit, Package } from "lucide-react";
+import { Loader2, AlertCircle, Edit, Package, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -124,15 +124,28 @@ const Catalog = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Catálogo</CardTitle>
-            <CardDescription>
-              {showAllProducts ? 
-                `Todos los productos de ${activeCategory}` :
-                hasActiveFilters ? 
-                  "Productos filtrados según tu selección" : 
-                  "Selecciona productos y arma tu paquete"
-              }
-            </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Catálogo</CardTitle>
+                  <CardDescription>
+                    {showAllProducts ? 
+                      `Todos los productos de ${activeCategory}` :
+                      hasActiveFilters ? 
+                        "Productos filtrados según tu selección" : 
+                        "Selecciona productos y arma tu paquete"
+                    }
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver al inicio
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as Category)}>
