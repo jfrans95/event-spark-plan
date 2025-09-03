@@ -227,23 +227,27 @@ const Auth = () => {
           // User exists but hasn't confirmed email
           toast({
             title: "Email ya registrado",
-            description: "Ya existe una cuenta con este email. Si no has confirmado tu email, revisa tu bandeja de entrada o solicita un nuevo enlace.",
+            description: "Ya existe una cuenta con este email. Si no has confirmado tu email, revisa tu bandeja de entrada.",
             variant: "destructive",
           });
           
           // Try to resend confirmation
-          await supabase.auth.resend({
-            type: 'signup',
-            email: email,
-            options: {
-              emailRedirectTo: redirectUrl
-            }
-          });
-          
-          toast({
-            title: "Email reenviado",
-            description: "Hemos reenviado el correo de confirmación. Revisa tu bandeja de entrada y spam.",
-          });
+          try {
+            await supabase.auth.resend({
+              type: 'signup',
+              email: email,
+              options: {
+                emailRedirectTo: redirectUrl
+              }
+            });
+            
+            toast({
+              title: "Email de confirmación reenviado",
+              description: "Hemos reenviado el correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam.",
+            });
+          } catch (resendError) {
+            console.error('Resend error:', resendError);
+          }
         } else if (error.message.includes('Email rate limit exceeded')) {
           toast({
             title: "Límite de emails excedido",

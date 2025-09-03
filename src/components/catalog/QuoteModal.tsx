@@ -69,7 +69,27 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         });
 
         if (signUpError) {
-          toast({ title: "Error de registro", description: signUpError.message, variant: "destructive" });
+          console.error('Signup error:', signUpError);
+          // Handle specific signup errors
+          if (signUpError.message?.includes('already registered')) {
+            toast({ 
+              title: "Email ya registrado", 
+              description: "Este email ya está registrado. Revisa tu bandeja para el correo de confirmación o intenta iniciar sesión.", 
+              variant: "destructive" 
+            });
+          } else if (signUpError.message?.includes('rate limit')) {
+            toast({ 
+              title: "Límite de intentos excedido", 
+              description: "Espera unos minutos antes de intentar de nuevo.", 
+              variant: "destructive" 
+            });
+          } else {
+            toast({ 
+              title: "Error de registro", 
+              description: `No se pudo crear la cuenta: ${signUpError.message}`, 
+              variant: "destructive" 
+            });
+          }
           return;
         }
 
@@ -103,12 +123,32 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         body: payload,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Quote creation error:', error);
+        const errorMessage = error.message || 'Error desconocido al crear la cotización';
+        toast({ 
+          title: "Error al procesar cotización", 
+          description: errorMessage, 
+          variant: "destructive" 
+        });
+        return;
+      }
 
-      toast({ 
-        title: "¡Cotización enviada exitosamente!", 
-        description: `Hemos enviado tu cotización detallada a ${email}. También te contactaremos pronto para coordinar los detalles.` 
-      });
+      console.log('Quote creation response:', data);
+
+      // Check if quote was created successfully
+      if (data?.quoteId) {
+        toast({ 
+          title: "¡Cotización creada exitosamente!", 
+          description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} ha sido enviada a ${email}. Si no recibes el correo en unos minutos, revisa tu carpeta de spam.` 
+        });
+      } else {
+        toast({
+          title: "Cotización procesada",
+          description: "Tu cotización fue creada pero puede haber un problema con el envío del email. Te contactaremos por WhatsApp.",
+          variant: "destructive"
+        });
+      }
       
       clear();
       onOpenChange(false);

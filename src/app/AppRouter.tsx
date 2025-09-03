@@ -44,6 +44,8 @@ export const AppRouter = () => {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Index />} />
+      <Route path="/aliados" element={<Partners />} />
+      <Route path="/partners" element={<Partners />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />

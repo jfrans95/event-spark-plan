@@ -391,6 +391,7 @@ export type Database = {
           contact_phone: string | null
           contact_whatsapp: string | null
           created_at: string
+          email_sent_at: string | null
           event_date: string | null
           event_location: string | null
           event_time: string | null
@@ -407,6 +408,7 @@ export type Database = {
           contact_phone?: string | null
           contact_whatsapp?: string | null
           created_at?: string
+          email_sent_at?: string | null
           event_date?: string | null
           event_location?: string | null
           event_time?: string | null
@@ -423,6 +425,7 @@ export type Database = {
           contact_phone?: string | null
           contact_whatsapp?: string | null
           created_at?: string
+          email_sent_at?: string | null
           event_date?: string | null
           event_location?: string | null
           event_time?: string | null
