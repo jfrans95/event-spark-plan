@@ -1,9 +1,32 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, LogIn } from "lucide-react";
+import { Heart, Users, User, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Header = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check current auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
+
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -29,17 +52,32 @@ export const Header = () => {
             </a>
           </nav>
 
-          {/* Auth Button */}
+          {/* Auth Buttons */}
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="hidden sm:flex">
               MVP v1.0
             </Badge>
-            <Button variant="outline" size="sm" className="gap-2" asChild>
-              <Link to="/auth">
-                <Users className="w-4 h-4" />
-                Aliados
-              </Link>
-            </Button>
+            
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2" asChild>
+                  <Link to="/user">
+                    <User className="w-4 h-4" />
+                    Mi Perfil
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="gap-2" asChild>
+                <Link to="/auth">
+                  <Users className="w-4 h-4" />
+                  Aliados
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

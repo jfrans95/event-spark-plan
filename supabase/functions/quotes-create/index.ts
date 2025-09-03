@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
     const quoteData = {
       user_id: userId || null, // Allow null for anonymous quotes
-      contact_name: body.contact.name,
+      contact_name: body.contact.name || "",
       contact_email: body.contact.email,
       contact_phone: body.contact.phone || null,
       contact_whatsapp: body.contact.whatsapp || null,
