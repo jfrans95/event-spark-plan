@@ -127,6 +127,27 @@ Deno.serve(async (req) => {
 
     console.log('Quote created successfully:', quote.id);
 
+    // Send quote email
+    try {
+      const { error: emailError } = await supabase.functions.invoke('send-quote-email', {
+        body: {
+          quoteId: quote.id,
+          email: body.contact.email,
+          name: body.contact.name
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending quote email:', emailError);
+        // Don't fail the quote creation if email fails
+      } else {
+        console.log('Quote email sent successfully');
+      }
+    } catch (emailError) {
+      console.error('Error calling send-quote-email function:', emailError);
+      // Don't fail the quote creation if email fails
+    }
+
     return new Response(
       JSON.stringify({ 
         quoteId: quote.id, 

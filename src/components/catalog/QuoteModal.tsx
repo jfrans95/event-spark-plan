@@ -74,8 +74,8 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         }
 
         toast({ 
-          title: "Registro exitoso", 
-          description: "Te hemos enviado un email de confirmación. Procederemos con tu cotización." 
+          title: "¡Registro exitoso!", 
+          description: "Te hemos enviado un email de confirmación personalizado. Procederemos con tu cotización." 
         });
       }
 
@@ -106,8 +106,8 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
       if (error) throw error;
 
       toast({ 
-        title: "Cotización enviada", 
-        description: `Te enviamos la cotización por email. ${!isLoggedIn && needsRegistration ? 'También te enviamos un enlace para acceder a tu perfil.' : ''}` 
+        title: "¡Cotización enviada exitosamente!", 
+        description: `Hemos enviado tu cotización detallada a ${email}. También te contactaremos pronto para coordinar los detalles.` 
       });
       
       clear();

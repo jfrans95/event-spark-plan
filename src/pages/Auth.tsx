@@ -261,7 +261,7 @@ const Auth = () => {
         if (data.user && !data.session) {
           // Usuario creado pero necesita confirmar email
           toast({
-            title: "Confirma tu email",
+            title: "¡Registro exitoso!",
             description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 24 horas.",
           });
           setAuthMode('signin');
