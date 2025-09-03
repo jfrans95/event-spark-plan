@@ -62,7 +62,8 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
           options: {
             emailRedirectTo: `${window.location.origin}/user`,
             data: {
-              full_name: name
+              full_name: name,
+              role: 'usuario'
             }
           }
         });
@@ -74,7 +75,7 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
         toast({ 
           title: "Registro exitoso", 
-          description: "Te hemos enviado un email de confirmación. La cotización se procesará después de confirmar tu cuenta." 
+          description: "Te hemos enviado un email de confirmación. Procederemos con tu cotización." 
         });
       }
 
