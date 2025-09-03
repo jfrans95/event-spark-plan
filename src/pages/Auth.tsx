@@ -185,6 +185,26 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
+      // First check if user already exists
+      const { data: existingUser } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (existingUser.user) {
+        // User exists and password is correct, redirect them
+        toast({
+          title: "Usuario ya registrado",
+          description: "Ya tienes una cuenta activa. Te redirigiremos a tu dashboard.",
+        });
+        return;
+      }
+    } catch (authError: any) {
+      // If sign in fails, continue with signup process
+      console.log('User does not exist or password incorrect, proceeding with signup');
+    }
+
+    try {
       // Set redirect URL based on role
       const redirectUrl = role === 'usuario' 
         ? `${window.location.origin}/user`
@@ -204,9 +224,30 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes('User already registered')) {
+          // User exists but hasn't confirmed email
           toast({
-            title: "Usuario ya registrado",
-            description: "Este email ya está registrado. Intenta iniciar sesión en su lugar.",
+            title: "Email ya registrado",
+            description: "Ya existe una cuenta con este email. Si no has confirmado tu email, revisa tu bandeja de entrada o solicita un nuevo enlace.",
+            variant: "destructive",
+          });
+          
+          // Try to resend confirmation
+          await supabase.auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+              emailRedirectTo: redirectUrl
+            }
+          });
+          
+          toast({
+            title: "Email reenviado",
+            description: "Hemos reenviado el correo de confirmación. Revisa tu bandeja de entrada y spam.",
+          });
+        } else if (error.message.includes('Email rate limit exceeded')) {
+          toast({
+            title: "Límite de emails excedido",
+            description: "Has solicitado demasiados emails. Espera unos minutos antes de intentar nuevamente.",
             variant: "destructive",
           });
         } else {
@@ -221,15 +262,22 @@ const Auth = () => {
           // Usuario creado pero necesita confirmar email
           toast({
             title: "Confirma tu email",
-            description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.",
+            description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 24 horas.",
           });
           setAuthMode('signin');
+        } else if (data.user && data.session) {
+          // Usuario creado y autenticado directamente
+          toast({
+            title: "Cuenta creada exitosamente",
+            description: "Tu cuenta ha sido creada y activada correctamente.",
+          });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: "Ocurrió un error inesperado",
+        description: "Ocurrió un error inesperado. Inténtalo nuevamente.",
         variant: "destructive",
       });
     } finally {
