@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
 import ProviderStatus from "@/components/ProviderStatus";
+import TestEmailButton from "@/components/TestEmailButton";
 
 type UserRole = 'administrator' | 'collaborator' | 'provider' | 'usuario';
 
@@ -453,6 +454,9 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Test Email Component - Solo para debugging */}
+        <TestEmailButton />
       </div>
     </div>
   );
