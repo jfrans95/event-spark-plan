@@ -67,11 +67,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If no authenticated user, create a quote without user_id (for anonymous users)
-    // In a real implementation, you might want to create a guest user or handle this differently
+    // For anonymous users, we'll create a temporary user record or handle differently
+    // For now, we'll require authentication for quotes
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required to create quotes" }), 
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const quoteData = {
-      user_id: userId || null, // Allow null for anonymous quotes
+      user_id: userId,
       contact_name: body.contact.name || "",
       contact_email: body.contact.email,
       contact_phone: body.contact.phone || null,

@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
 import ProviderStatus from "@/components/ProviderStatus";
 
-type UserRole = 'administrator' | 'collaborator' | 'provider';
+type UserRole = 'administrator' | 'collaborator' | 'provider' | 'usuario';
 
 const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -104,6 +104,9 @@ const Auth = () => {
             navigate('/proveedor/registro');
             return;
           }
+        } else if (profile.role === 'collaborator' && user.user_metadata?.role === 'usuario') {
+          // Users registered as 'usuario' but mapped to 'collaborator' role
+          navigate('/user');
         } else {
           // Other roles, redirect to appropriate dashboard
           const roleRoutes = {
@@ -182,7 +185,10 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      const redirectUrl = `${window.location.origin}/proveedor/registro`;
+      // Set redirect URL based on role
+      const redirectUrl = role === 'usuario' 
+        ? `${window.location.origin}/user`
+        : `${window.location.origin}/proveedor/registro`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -370,10 +376,11 @@ const Auth = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona tu rol" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="collaborator">Colaborador</SelectItem>
-                        <SelectItem value="provider">Proveedor</SelectItem>
-                      </SelectContent>
+                        <SelectContent>
+                          <SelectItem value="usuario">Usuario</SelectItem>
+                          <SelectItem value="collaborator">Colaborador</SelectItem>
+                          <SelectItem value="provider">Proveedor</SelectItem>
+                        </SelectContent>
                     </Select>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
