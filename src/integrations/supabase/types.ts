@@ -399,7 +399,7 @@ export type Database = {
           status: Database["public"]["Enums"]["quote_status"]
           total_amount: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           contact_email: string
@@ -415,7 +415,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           total_amount?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           contact_email?: string
@@ -431,7 +431,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           total_amount?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
