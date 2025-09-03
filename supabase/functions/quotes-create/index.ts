@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
 
     // Send quote email
     try {
-      const { error: emailError } = await supabase.functions.invoke('send-quote-email', {
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote-email', {
         body: {
           quoteId: quote.id,
           email: body.contact.email,
@@ -139,13 +139,32 @@ Deno.serve(async (req) => {
 
       if (emailError) {
         console.error('Error sending quote email:', emailError);
-        // Don't fail the quote creation if email fails
-      } else {
+        // Update quote with email error status
+        await supabase
+          .from('quotes')
+          .update({ email_sent_at: null })
+          .eq('id', quote.id);
+      } else if (emailData?.success) {
         console.log('Quote email sent successfully');
+        // Mark email as sent
+        await supabase
+          .from('quotes')
+          .update({ email_sent_at: new Date().toISOString() })
+          .eq('id', quote.id);
+      } else {
+        console.error('Quote email failed:', emailData);
+        await supabase
+          .from('quotes')
+          .update({ email_sent_at: null })
+          .eq('id', quote.id);
       }
     } catch (emailError) {
       console.error('Error calling send-quote-email function:', emailError);
-      // Don't fail the quote creation if email fails
+      // Update quote with email error status
+      await supabase
+        .from('quotes')
+        .update({ email_sent_at: null })
+        .eq('id', quote.id);
     }
 
     return new Response(
