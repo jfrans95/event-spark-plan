@@ -186,26 +186,6 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      // First check if user already exists
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (existingUser.user) {
-        // User exists and password is correct, redirect them
-        toast({
-          title: "Usuario ya registrado",
-          description: "Ya tienes una cuenta activa. Te redirigiremos a tu dashboard.",
-        });
-        return;
-      }
-    } catch (authError: any) {
-      // If sign in fails, continue with signup process
-      console.log('User does not exist or password incorrect, proceeding with signup');
-    }
-
-    try {
       // Set redirect URL based on role
       const redirectUrl = role === 'usuario' 
         ? `${window.location.origin}/user`
