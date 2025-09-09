@@ -245,6 +245,22 @@ const Auth = () => {
       } else {
         if (data.user && !data.session) {
           // Usuario creado pero necesita confirmar email
+          // Enviar correo personalizado de confirmación
+          try {
+            await supabase.functions.invoke('send-confirmation-email', {
+              body: {
+                email: data.user.email,
+                name: fullName,
+                confirmationUrl: redirectUrl,
+                role: role
+              },
+            });
+            
+            console.log('Custom confirmation email sent successfully');
+          } catch (emailError) {
+            console.error('Error sending custom confirmation email:', emailError);
+          }
+          
           toast({
             title: "¡Registro exitoso!",
             description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 24 horas.",
