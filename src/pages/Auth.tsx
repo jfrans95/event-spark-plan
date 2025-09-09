@@ -186,10 +186,10 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      // Set redirect URL based on role
-      const redirectUrl = role === 'usuario' 
-        ? `${window.location.origin}/user`
-        : `${window.location.origin}/proveedor/registro`;
+      // Set callback URL for email confirmation
+      const callbackUrl = `${window.location.origin}/auth/callback`;
+      const nextUrl = role === 'usuario' ? '/user' : '/proveedor/registro';
+      const redirectUrl = `${callbackUrl}?next=${encodeURIComponent(nextUrl)}`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -245,29 +245,14 @@ const Auth = () => {
       } else {
         if (data.user && !data.session) {
           // Usuario creado pero necesita confirmar email
-          // Enviar correo personalizado de confirmación
-          try {
-            await supabase.functions.invoke('send-confirmation-email', {
-              body: {
-                email: data.user.email,
-                name: fullName,
-                confirmationUrl: redirectUrl,
-                role: role
-              },
-            });
-            
-            console.log('Custom confirmation email sent successfully');
-          } catch (emailError) {
-            console.error('Error sending custom confirmation email:', emailError);
-          }
-          
+          // Supabase enviará automáticamente el correo de confirmación
           toast({
             title: "¡Registro exitoso!",
             description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 24 horas.",
           });
           setAuthMode('signin');
         } else if (data.user && data.session) {
-          // Usuario creado y autenticado directamente
+          // Usuario creado y autenticado directamente (confirmaciones deshabilitadas)
           toast({
             title: "Cuenta creada exitosamente",
             description: "Tu cuenta ha sido creada y activada correctamente.",
