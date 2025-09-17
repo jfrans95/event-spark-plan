@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.resend-quote-email]
 verify_jwt = false
 
+[functions.resend-confirmation-email]
+verify_jwt = false
+
 [functions.tracking-get]
 verify_jwt = false
 
@@ -22,6 +25,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.test-email]
+verify_jwt = false
+
+[functions.execute-event]
+verify_jwt = false
+
+[functions.seed-demo]
 verify_jwt = false
 
 

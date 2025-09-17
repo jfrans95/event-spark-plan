@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
 import ProviderStatus from "@/components/ProviderStatus";
 import TestEmailButton from "@/components/TestEmailButton";
+import ResendConfirmationButton from "@/components/ResendConfirmationButton";
 
 type UserRole = 'administrator' | 'collaborator' | 'provider' | 'usuario';
 
@@ -242,23 +243,25 @@ const Auth = () => {
             variant: "destructive",
           });
         }
-      } else {
-        if (data.user && !data.session) {
-          // Usuario creado pero necesita confirmar email
-          // Supabase enviará automáticamente el correo de confirmación
-          toast({
-            title: "¡Registro exitoso!",
-            description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 24 horas.",
-          });
-          setAuthMode('signin');
-        } else if (data.user && data.session) {
-          // Usuario creado y autenticado directamente (confirmaciones deshabilitadas)
-          toast({
-            title: "Cuenta creada exitosamente",
-            description: "Tu cuenta ha sido creada y activada correctamente.",
-          });
+        } else {
+          if (data.user && !data.session) {
+            // Usuario creado pero necesita confirmar email
+            // Supabase enviará automáticamente el correo de confirmación
+            toast({
+              title: "¡Registro exitoso!",
+              description: "Revisa tu correo para confirmar tu cuenta. El enlace expira en 24 horas.",
+            });
+            setAuthMode('signin');
+          } else if (data.user && data.session) {
+            // Usuario creado y autenticado directamente (confirmaciones deshabilitadas)
+            // No hacer login inmediato, mostrar mensaje para confirmar
+            toast({
+              title: "¡Registro exitoso!",
+              description: "Revisa tu correo para confirmar tu cuenta.",
+            });
+            setAuthMode('signin');
+          }
         }
-      }
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -321,6 +324,7 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4 mt-6">
+                <ResendConfirmationButton />
                 <form onSubmit={(e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
