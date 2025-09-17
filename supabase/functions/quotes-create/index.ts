@@ -119,16 +119,22 @@ Deno.serve(async (req) => {
     // In production, you'd generate an actual PDF here
     const pdfUrl = `https://uuioedhcwydmtoywyvtq.supabase.co/storage/v1/object/public/public-assets/sample-quote.pdf`;
 
-    // Update quote with PDF URL
-    await supabase
+    // Update quote with PDF URL BEFORE sending email
+    const { error: pdfUpdateError } = await supabase
       .from('quotes')
       .update({ pdf_url: pdfUrl })
       .eq('id', quote.id);
 
-    console.log('Quote created successfully:', quote.id);
+    if (pdfUpdateError) {
+      console.error('Error updating PDF URL:', pdfUpdateError);
+      throw new Error(`Failed to set PDF URL: ${pdfUpdateError.message}`);
+    }
 
-    // Send quote email
+    console.log('Quote created successfully with PDF:', quote.id);
+
+    // Send quote email after PDF is ready
     try {
+      console.log('Invoking send-quote-email for quote:', quote.id);
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote-email', {
         body: {
           quoteId: quote.id,
@@ -139,32 +145,15 @@ Deno.serve(async (req) => {
 
       if (emailError) {
         console.error('Error sending quote email:', emailError);
-        // Update quote with email error status
-        await supabase
-          .from('quotes')
-          .update({ email_sent_at: null })
-          .eq('id', quote.id);
+        // Don't fail the quote creation, just log the email issue
       } else if (emailData?.success) {
-        console.log('Quote email sent successfully');
-        // Mark email as sent
-        await supabase
-          .from('quotes')
-          .update({ email_sent_at: new Date().toISOString() })
-          .eq('id', quote.id);
+        console.log('Quote email sent successfully, messageId:', emailData.messageId);
       } else {
-        console.error('Quote email failed:', emailData);
-        await supabase
-          .from('quotes')
-          .update({ email_sent_at: null })
-          .eq('id', quote.id);
+        console.error('Quote email failed with response:', emailData);
       }
     } catch (emailError) {
       console.error('Error calling send-quote-email function:', emailError);
-      // Update quote with email error status
-      await supabase
-        .from('quotes')
-        .update({ email_sent_at: null })
-        .eq('id', quote.id);
+      // Don't fail the quote creation, just log the email issue
     }
 
     return new Response(

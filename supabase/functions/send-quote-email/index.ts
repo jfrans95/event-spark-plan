@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { quoteId, email, name }: QuoteEmailRequest = await req.json();
 
-    console.log('Sending quote email to:', email, 'for quote:', quoteId);
+    console.log('Processing quote email request for quote:', quoteId, 'email:', email);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -61,7 +61,31 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (quoteError || !quote) {
+      console.error('Quote not found:', quoteError?.message);
       throw new Error(`Quote not found: ${quoteError?.message}`);
+    }
+
+    // Idempotency check: if email already sent, return success without resending
+    if (quote.email_sent_at) {
+      console.log('Email already sent for quote:', quoteId, 'at:', quote.email_sent_at);
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: "Email already sent",
+        alreadySent: true,
+        sentAt: quote.email_sent_at
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Verify PDF URL exists (blocking requirement)
+    if (!quote.pdf_url) {
+      console.error('PDF URL missing for quote:', quoteId);
+      throw new Error(`PDF not ready for quote ${quoteId}. Please try again later.`);
     }
 
     // Format quote items for email
@@ -189,10 +213,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Quote email sent successfully:", emailResponse);
 
+    // Update quote with email_sent_at timestamp
+    const { error: updateError } = await supabase
+      .from('quotes')
+      .update({ email_sent_at: new Date().toISOString() })
+      .eq('id', quoteId);
+
+    if (updateError) {
+      console.error('Failed to update email_sent_at:', updateError);
+      // Continue anyway since email was sent successfully
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       message: "Quote email sent successfully",
-      messageId: emailResponse.data?.id 
+      messageId: emailResponse.data?.id,
+      sentAt: new Date().toISOString()
     }), {
       status: 200,
       headers: {

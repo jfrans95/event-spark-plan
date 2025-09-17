@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.send-quote-email]
 verify_jwt = false
 
+[functions.resend-quote-email]
+verify_jwt = false
+
 [functions.tracking-get]
 verify_jwt = false
 
