@@ -218,6 +218,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_auth_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
