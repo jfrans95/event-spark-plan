@@ -9,11 +9,10 @@ import ProductCard from "@/components/catalog/ProductCard";
 import PackageSidebar from "@/components/catalog/PackageSidebar";
 import QuoteModal from "@/components/catalog/QuoteModal";
 import EditEventModal from "@/components/catalog/EditEventModal";
-import { Loader2, AlertCircle, Edit, Package, ArrowLeft } from "lucide-react";
+import { Loader2, AlertCircle, Edit, Package } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { getSpaceTypeLabel, getEventTypeLabel, getPlanLabel } from "@/constants/productTags";
 
 const CATEGORIES: Category[] = [
   "Montaje técnico",
@@ -80,8 +79,9 @@ const Catalog = () => {
 
   const hasActiveFilters = !!(appliedFilters.espacio || appliedFilters.evento || appliedFilters.plan || appliedFilters.aforo);
 
-  // Products are already filtered by category in useProducts hook
-  const filteredProducts = products;
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => p.category === activeCategory);
+  }, [products, activeCategory]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,48 +104,35 @@ const Catalog = () => {
                   </Button>
                 </div>
                 
-                 <div className="flex flex-wrap gap-2">
-                   {appliedFilters.espacio && (
-                     <Badge variant="secondary">📍 {getSpaceTypeLabel(appliedFilters.espacio)}</Badge>
-                   )}
-                   {appliedFilters.evento && (
-                     <Badge variant="secondary">🎉 {getEventTypeLabel(appliedFilters.evento)}</Badge>
-                   )}
-                   {appliedFilters.plan && (
-                     <Badge variant="secondary">💎 {getPlanLabel(appliedFilters.plan)}</Badge>
-                   )}
-                   {appliedFilters.aforo && (
-                     <Badge variant="secondary">👥 {appliedFilters.aforo} invitados</Badge>
-                   )}
-                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {appliedFilters.espacio && (
+                    <Badge variant="secondary">📍 {appliedFilters.espacio}</Badge>
+                  )}
+                  {appliedFilters.evento && (
+                    <Badge variant="secondary">🎉 {appliedFilters.evento}</Badge>
+                  )}
+                  {appliedFilters.plan && (
+                    <Badge variant="secondary">💎 {appliedFilters.plan}</Badge>
+                  )}
+                  {appliedFilters.aforo && (
+                    <Badge variant="secondary">👥 {appliedFilters.aforo} invitados</Badge>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}
 
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Catálogo</CardTitle>
-                  <CardDescription>
-                    {showAllProducts ? 
-                      `Todos los productos de ${activeCategory}` :
-                      hasActiveFilters ? 
-                        "Productos filtrados según tu selección" : 
-                        "Selecciona productos y arma tu paquete"
-                    }
-                  </CardDescription>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/')}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Volver al inicio
-                </Button>
-              </div>
+              <CardTitle>Catálogo</CardTitle>
+            <CardDescription>
+              {showAllProducts ? 
+                `Todos los productos de ${activeCategory}` :
+                hasActiveFilters ? 
+                  "Productos filtrados según tu selección" : 
+                  "Selecciona productos y arma tu paquete"
+              }
+            </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as Category)}>

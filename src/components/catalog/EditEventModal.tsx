@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GuestSlider } from "@/components/ui/guest-slider";
+import { GuestSelector } from "@/components/ui/guest-selector";
 import { getAllSpaceTypes, getAllEventTypes, PLAN_TYPES } from "@/constants/productTags";
 
 interface Filters {
@@ -56,7 +56,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {getAllSpaceTypes().map((space) => (
-                  <SelectItem key={space.value} value={space.value}>
+                  <SelectItem key={space.value} value={space.label}>
                     {space.icon} {space.label}
                   </SelectItem>
                 ))}
@@ -67,9 +67,11 @@ const EditEventModal = ({
           {/* Cantidad de Invitados */}
           <div className="space-y-2">
             <Label>Cantidad de Invitados</Label>
-            <GuestSlider
+            <GuestSelector
               value={filters.aforo || null}
               onChange={(value) => onFiltersChange({ ...filters, aforo: value })}
+              variant="inline"
+              placeholder="Selecciona cantidad"
             />
           </div>
 
@@ -85,7 +87,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {getAllEventTypes().map((event) => (
-                  <SelectItem key={event.value} value={event.value}>
+                  <SelectItem key={event.value} value={event.label}>
                     {event.icon} {event.label}
                   </SelectItem>
                 ))}
@@ -105,7 +107,7 @@ const EditEventModal = ({
               </SelectTrigger>
               <SelectContent>
                 {PLAN_TYPES.map((plan) => (
-                  <SelectItem key={plan.value} value={plan.value}>
+                  <SelectItem key={plan.value} value={plan.label}>
                     {plan.label}
                   </SelectItem>
                 ))}

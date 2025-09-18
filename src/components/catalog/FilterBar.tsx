@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { GuestSlider } from "@/components/ui/guest-slider";
-
+import { GuestSelector } from "@/components/ui/guest-selector";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -179,9 +179,10 @@ const FilterBar = () => {
         {/* Guest Count */}
         <div className="space-y-1">
           <Label>Cantidad de invitados</Label>
-          <GuestSlider
+          <GuestSelector
             value={params.get("aforo") ? parseInt(params.get("aforo")!) : null}
             onChange={onGuestCountChange}
+            variant="inline"
           />
         </div>
 

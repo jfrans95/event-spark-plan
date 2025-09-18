@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GuestSlider } from "@/components/ui/guest-slider";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { Upload, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -277,11 +277,23 @@ const AgregarProducto = () => {
             {/* Cantidad de personas */}
             <div className="space-y-4">
               <Label>Cantidad de Personas</Label>
-              <GuestSlider
-                value={capacityRange[0]}
-                onChange={(value) => setCapacityRange([value])}
-                className="w-full"
-              />
+              <div className="space-y-2">
+                <Slider
+                  value={capacityRange}
+                  onValueChange={setCapacityRange}
+                  max={500}
+                  min={20}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>20</span>
+                  <span className="font-medium">
+                    {getCapacityRangeFromValue(capacityRange[0])[0]} - {getCapacityRangeFromValue(capacityRange[0])[1]} personas
+                  </span>
+                  <span>500</span>
+                </div>
+              </div>
             </div>
 
             {/* Tipos de eventos */}
