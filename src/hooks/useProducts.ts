@@ -43,10 +43,18 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // Debounce to prevent excessive requests
+    const timeoutId = setTimeout(() => {
+      fetchProducts();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria, mode]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
         console.log('=== QUERY DEBUG ===');
         console.log('Mode:', mode);
@@ -113,9 +121,6 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
         setLoading(false);
       }
     };
-
-    fetchProducts();
-  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria, mode]);
 
   return { products, loading, error };
 };

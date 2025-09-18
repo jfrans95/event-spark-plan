@@ -156,16 +156,21 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
       if (data?.quoteId) {
         console.log('Quote created successfully, attempting to send email...');
         
-        // Wait for PDF to be generated before sending email
+        // Circuit breaker to prevent infinite loops
         let emailSent = false;
         let attempts = 0;
         const maxAttempts = 3;
+        const baseDelay = 2000; // 2 seconds
         
         while (!emailSent && attempts < maxAttempts) {
           attempts++;
           console.log(`Email attempt ${attempts}/${maxAttempts}`);
           
           try {
+            // Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            
             const { data: emailResponse, error: emailError } = await supabase.functions.invoke('send-quote-email', {
               body: { 
                 quoteId: data.quoteId,
@@ -174,15 +179,22 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
               }
             });
             
+            clearTimeout(timeoutId);
             console.log('Email response:', emailResponse);
             
             if (emailError) {
               console.error('Email error:', emailError);
+              
+              // Only retry for specific errors and within attempt limit
               if (emailError.message?.includes('PDF not ready') && attempts < maxAttempts) {
-                // Wait 2 seconds before retrying if PDF not ready
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Exponential backoff: 2s, 4s, 8s
+                const delay = baseDelay * Math.pow(2, attempts - 1);
+                console.log(`Waiting ${delay}ms before retry ${attempts + 1}`);
+                await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
               }
+              
+              // Don't retry for other errors
               throw emailError;
             }
             
@@ -199,17 +211,33 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
                   description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} ha sido enviada a ${email}. Si no recibes el correo en unos minutos, revisa tu carpeta de spam.` 
                 });
               }
+              break; // Success, exit loop
             } else {
               throw new Error(emailResponse?.error || 'Unknown email error');
             }
           } catch (emailErr: any) {
             console.error(`Email attempt ${attempts} failed:`, emailErr);
+            
+            // If it's an abort error (timeout), don't retry
+            if (emailErr.name === 'AbortError') {
+              console.error('Email request timed out');
+              break;
+            }
+            
+            // If maximum attempts reached, show final error
             if (attempts >= maxAttempts) {
               toast({
                 title: "Cotización creada",
-                description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} fue creada exitosamente, pero hubo un problema al enviar el correo: ${emailErr.message}. Te contactaremos por WhatsApp.`,
+                description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} fue creada exitosamente, pero hubo un problema al enviar el correo. Te contactaremos por WhatsApp.`,
                 variant: "destructive"
               });
+              break;
+            }
+            
+            // Wait before next attempt only if we're going to retry
+            if (attempts < maxAttempts) {
+              const delay = baseDelay * Math.pow(2, attempts - 1);
+              await new Promise(resolve => setTimeout(resolve, delay));
             }
           }
         }
