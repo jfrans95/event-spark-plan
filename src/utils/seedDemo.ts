@@ -10,23 +10,26 @@ export const createDemoSeed = async () => {
     });
 
     if (error) {
+      console.error('Seed function error:', error);
       throw error;
     }
 
-    console.log('Seed demo created:', data);
+    console.log('Seed demo created successfully:', data);
     
     toast({
-      title: "Demo data created",
-      description: `Created ${data.providers_created} providers and ${data.products_created} products`,
+      title: "Demo data creado exitosamente",
+      description: `Creados ${data.providers_created} proveedores y ${data.products_created} productos`,
     });
 
     return data;
   } catch (error) {
     console.error('Error creating seed demo:', error);
     
+    const errorMessage = error?.message || error?.details || error?.hint || "Error desconocido";
+    
     toast({
-      title: "Error creating demo data",
-      description: error.message || "Unknown error occurred",
+      title: "Error creando datos de prueba",
+      description: errorMessage,
       variant: "destructive"
     });
     

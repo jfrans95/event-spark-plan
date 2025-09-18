@@ -8,7 +8,7 @@ interface Props {
 }
 
 const PackageSidebar = ({ onQuote }: Props) => {
-  const { groupedByCategory, removeItem, updateQty, total } = usePackage();
+  const { groupedByCategory, removeItem, updateQty, total, items } = usePackage();
 
   return (
     <Card className="sticky top-20">
@@ -53,9 +53,13 @@ const PackageSidebar = ({ onQuote }: Props) => {
               <span className="text-sm text-muted-foreground">Total estimado</span>
               <strong>${total.toLocaleString("es-CO")} COP</strong>
             </div>
-            <Button className="w-full" onClick={onQuote}>
-              Hacer cotización
-            </Button>
+          <Button 
+            className="w-full" 
+            onClick={onQuote}
+            disabled={items.length === 0}
+          >
+            Hacer cotización
+          </Button>
           </div>
         )}
       </CardContent>

@@ -24,10 +24,12 @@ const Dashboard = () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        navigate("/aliados");
+        console.log('No authenticated user, redirecting to auth');
+        navigate("/auth");
         return;
       }
 
+      console.log('User authenticated:', user.email);
       setUser(user);
 
       // Get user role from profiles
@@ -40,13 +42,17 @@ const Dashboard = () => {
       if (profileError) {
         console.error('Error fetching profile:', profileError);
         toast({
-          title: "Error",
-          description: "No se pudo cargar el perfil de usuario",
+          title: "Error de perfil",
+          description: "No se pudo cargar el perfil de usuario. Inicia sesión de nuevo.",
           variant: "destructive",
         });
+        // Sign out user if profile cannot be loaded
+        await supabase.auth.signOut();
+        navigate("/auth");
         return;
       }
 
+      console.log('User role:', profile.role);
       setUserRole(profile.role);
       
       // Redirect to appropriate dashboard if not already there
@@ -61,11 +67,18 @@ const Dashboard = () => {
       const currentPath = window.location.pathname;
       
       if (targetRoute && currentPath === '/dashboard') {
+        console.log('Redirecting to role-specific dashboard:', targetRoute);
         navigate(targetRoute, { replace: true });
       }
     } catch (error) {
       console.error('Error checking user:', error);
-      navigate("/aliados");
+      toast({
+        title: "Error de autenticación",
+        description: "Problema de autenticación. Inicia sesión de nuevo.",
+        variant: "destructive",
+      });
+      await supabase.auth.signOut();
+      navigate("/auth");
     } finally {
       setLoading(false);
     }
@@ -75,6 +88,10 @@ const Dashboard = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear all user state
+      setUser(null);
+      setUserRole(null);
       
       toast({
         title: "Sesión cerrada",
@@ -139,7 +156,7 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="outline" onClick={() => navigate("/logout")}>
               <LogOut className="w-4 h-4 mr-2" />
               Cerrar Sesión
             </Button>

@@ -210,7 +210,12 @@ const Inventario = () => {
                 )}
                 
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate(`/dashboard/proveedor/editar-producto/${product.id}`)}
+                  >
                     <Edit className="w-4 h-4 mr-1" />
                     Editar
                   </Button>

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GuestSlider } from "@/components/ui/guest-slider";
 import { toast } from "@/hooks/use-toast";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { SPACE_TYPES, EVENT_TYPES, PLAN_TYPES, getCapacityFromValue } from "@/constants/productTags";
 
 interface ProductFormData {
@@ -26,14 +26,17 @@ interface ProductFormData {
   images: FileList | null;
 }
 
-const AgregarProducto = () => {
+const EditarProducto = () => {
+  const { productId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [selectedSpaceTypes, setSelectedSpaceTypes] = useState<string[]>([]);
   const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>([]);
   const [capacityRange, setCapacityRange] = useState([20]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
-  const navigate = useNavigate();
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const {
     register,
@@ -42,16 +45,81 @@ const AgregarProducto = () => {
     formState: { errors }
   } = useForm<ProductFormData>();
 
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoadingProduct(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: providerProfile } = await supabase
+        .from('provider_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!providerProfile) return;
+
+      const { data: product, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .eq('provider_id', providerProfile.id)
+        .single();
+
+      if (error || !product) {
+        toast({
+          title: "Error",
+          description: "Producto no encontrado.",
+          variant: "destructive"
+        });
+        navigate('/dashboard/proveedor/inventario');
+        return;
+      }
+
+      // Populate form fields
+      setValue('name', product.name);
+      setValue('description', product.description);
+      setValue('price', product.price);
+      setValue('plan', product.plan);
+      
+      setSelectedSpaceTypes(product.space_types as any || []);
+      setSelectedEventTypes(product.event_types as any || []);
+      setExistingImages(product.images || []);
+
+      // Calculate capacity slider value
+      const avgCapacity = (product.capacity_min + product.capacity_max) / 2;
+      setCapacityRange([avgCapacity]);
+
+    } catch (error: any) {
+      console.error('Error fetching product:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el producto.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProduct(false);
+    }
+  };
+
   const getCapacityRangeFromValue = (value: number): [number, number] => {
     return getCapacityFromValue(value);
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    if (files.length + selectedImages.length > 3) {
+    const totalImages = selectedImages.length + existingImages.length;
+    
+    if (files.length + totalImages > 3) {
       toast({
         title: "Máximo 3 imágenes",
-        description: "Solo puedes subir hasta 3 imágenes por producto.",
+        description: "Solo puedes tener hasta 3 imágenes por producto.",
         variant: "destructive"
       });
       return;
@@ -65,7 +133,7 @@ const AgregarProducto = () => {
     setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImage = (index: number) => {
     const newImages = selectedImages.filter((_, i) => i !== index);
     const newPreviewUrls = imagePreviewUrls.filter((_, i) => i !== index);
     
@@ -74,6 +142,11 @@ const AgregarProducto = () => {
     
     setSelectedImages(newImages);
     setImagePreviewUrls(newPreviewUrls);
+  };
+
+  const removeExistingImage = (index: number) => {
+    const newExistingImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(newExistingImages);
   };
 
   const handleSpaceTypeChange = (spaceType: string, checked: boolean) => {
@@ -92,11 +165,16 @@ const AgregarProducto = () => {
     }
   };
 
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return null;
+    const { data } = supabase.storage.from('product-images').getPublicUrl(imagePath);
+    return data.publicUrl;
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     setLoading(true);
     
     try {
-      // Get current user's provider profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Usuario no autenticado");
@@ -112,8 +190,8 @@ const AgregarProducto = () => {
         throw new Error("Perfil de proveedor no encontrado");
       }
 
-      // Upload images to storage
-      const imageUrls: string[] = [];
+      // Upload new images to storage
+      const newImageUrls: string[] = [];
       for (let i = 0; i < selectedImages.length; i++) {
         const file = selectedImages[i];
         const fileExt = file.name.split('.').pop();
@@ -126,45 +204,48 @@ const AgregarProducto = () => {
         if (uploadError) {
           console.error('Error uploading image:', uploadError);
         } else if (uploadData) {
-          imageUrls.push(uploadData.path);
+          newImageUrls.push(uploadData.path);
         }
       }
+
+      // Combine existing images with new ones
+      const allImageUrls = [...existingImages, ...newImageUrls];
 
       // Get capacity range
       const [capacityMin, capacityMax] = getCapacityRangeFromValue(capacityRange[0]);
 
-      // Insert product
-      const { error: insertError } = await supabase
+      // Update product
+      const { error: updateError } = await supabase
         .from('products')
-        .insert({
-          provider_id: providerProfile.id,
+        .update({
           name: data.name,
           description: data.description,
           price: data.price,
           plan: data.plan,
-          space_types: selectedSpaceTypes,
-          event_types: selectedEventTypes,
+          space_types: selectedSpaceTypes as any,
+          event_types: selectedEventTypes as any,
           capacity_min: capacityMin,
           capacity_max: capacityMax,
-          images: imageUrls
-        } as any); // Temporary any cast until types are regenerated
+          images: allImageUrls
+        })
+        .eq('id', productId);
 
-      if (insertError) {
-        throw insertError;
+      if (updateError) {
+        throw updateError;
       }
 
       toast({
-        title: "Producto agregado",
-        description: "El producto ha sido agregado exitosamente a tu inventario.",
+        title: "Producto actualizado",
+        description: "El producto ha sido actualizado exitosamente.",
       });
 
       navigate('/dashboard/proveedor/inventario');
       
     } catch (error: any) {
-      console.error('Error adding product:', error);
+      console.error('Error updating product:', error);
       toast({
         title: "Error",
-        description: error.message || "Ocurrió un error al agregar el producto.",
+        description: error.message || "Ocurrió un error al actualizar el producto.",
         variant: "destructive",
       });
     } finally {
@@ -172,11 +253,30 @@ const AgregarProducto = () => {
     }
   };
 
+  if (loadingProduct) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Cargando producto...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Agregar Nuevo Producto</h2>
-        <p className="text-muted-foreground">Completa la información del producto</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Editar Producto</h2>
+          <p className="text-muted-foreground">Actualiza la información del producto</p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/dashboard/proveedor/inventario')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al inventario
+        </Button>
       </div>
 
       <Card>
@@ -200,12 +300,38 @@ const AgregarProducto = () => {
             
             {/* Fotos del producto */}
             <div className="space-y-2">
-              <Label>Fotos del Producto (máximo 3) *</Label>
+              <Label>Fotos del Producto (máximo 3)</Label>
+              
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Imágenes actuales:</p>
+                  <div className="grid grid-cols-3 gap-4">
+                    {existingImages.map((imagePath, index) => (
+                      <div key={index} className="relative">
+                        <img 
+                          src={getImageUrl(imagePath) || ''}
+                          alt={`Imagen ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(index)}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 w-6 h-6 flex items-center justify-center"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
                 <div className="text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground mb-2">
-                    Arrastra archivos aquí o haz clic para seleccionar
+                    Arrastra archivos aquí o haz clic para agregar más imágenes
                   </div>
                   <Input
                     type="file"
@@ -214,29 +340,29 @@ const AgregarProducto = () => {
                     className="hidden"
                     id="images"
                     onChange={handleImageUpload}
-                    disabled={selectedImages.length >= 3}
+                    disabled={selectedImages.length + existingImages.length >= 3}
                   />
                   <Label 
                     htmlFor="images" 
                     className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md cursor-pointer hover:bg-primary/90"
                   >
-                    Seleccionar imágenes
+                    Agregar imágenes
                   </Label>
                 </div>
                 
-                {/* Preview de imágenes */}
+                {/* Preview de nuevas imágenes */}
                 {imagePreviewUrls.length > 0 && (
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     {imagePreviewUrls.map((url, index) => (
                       <div key={index} className="relative">
                         <img 
                           src={url} 
-                          alt={`Preview ${index + 1}`}
+                          alt={`Nueva imagen ${index + 1}`}
                           className="w-full h-24 object-cover rounded-md"
                         />
                         <button
                           type="button"
-                          onClick={() => removeImage(index)}
+                          onClick={() => removeNewImage(index)}
                           className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 w-6 h-6 flex items-center justify-center"
                         >
                           <X className="w-3 h-3" />
@@ -362,10 +488,10 @@ const AgregarProducto = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Agregando producto...
+                  Actualizando producto...
                 </>
               ) : (
-                "Agregar Producto"
+                "Actualizar Producto"
               )}
             </Button>
           </form>
@@ -375,4 +501,4 @@ const AgregarProducto = () => {
   );
 };
 
-export default AgregarProducto;
+export default EditarProducto;

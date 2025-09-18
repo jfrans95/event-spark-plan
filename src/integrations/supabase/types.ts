@@ -218,7 +218,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_products_by_filters: {
+        Args: {
+          p_aforo?: number
+          p_categoria?: string
+          p_espacio?: string
+          p_evento?: string
+          p_plan?: string
+          p_show_all?: boolean
+        }
+        Returns: {
+          activo: boolean
+          capacity_max: number
+          capacity_min: number
+          categoria: Database["public"]["Enums"]["category_type"]
+          created_at: string
+          description: string
+          event_types: Database["public"]["Enums"]["event_type"][]
+          id: string
+          images: string[]
+          name: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          price: number
+          provider_id: string
+          provider_name: string
+          space_types: Database["public"]["Enums"]["space_type"][]
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       app_role:

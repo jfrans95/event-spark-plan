@@ -33,10 +33,11 @@ const mapDbProductToProduct = (dbProduct: any): Product => ({
   capacity_max: dbProduct.capacity_max,
   event_types: dbProduct.event_types,
   plan: dbProduct.plan,
-  activo: dbProduct.activo
+  activo: dbProduct.activo,
+  provider_name: dbProduct.provider_name || dbProduct.provider_profiles?.provider_applications?.company_name || "Proveedor"
 });
 
-export const useProducts = (filters?: ProductFilters) => {
+export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' = 'filtered') => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,66 +48,74 @@ export const useProducts = (filters?: ProductFilters) => {
         setLoading(true);
         setError(null);
 
-        let query = supabase
-          .from('products')
-          .select(`
-            *,
-            provider_profiles!inner(
-              user_id,
-              provider_applications!inner(
-                status
-              )
-            )
-          `)
-          .eq('activo', true)
-          .eq('provider_profiles.provider_applications.status', 'approved');
+        console.log('=== QUERY DEBUG ===');
+        console.log('Mode:', mode);
+        console.log('Filters received:', filters);
+        
+        // Convert display category to database enum
+        const dbCategoria = filters?.categoria ? 
+          Object.entries(categoryMap).find(([_, displayName]) => displayName === filters.categoria)?.[0] : 
+          null;
+          
+        console.log('Using RPC function with params:', {
+          categoria: dbCategoria,
+          espacio: mode === 'filtered' ? filters?.espacio : null,
+          aforo: mode === 'filtered' ? filters?.aforo : null, 
+          evento: mode === 'filtered' ? filters?.evento : null,
+          plan: mode === 'filtered' ? filters?.plan : null,
+          showAll: mode === 'all'
+        });
 
-        // Apply filters
-        if (filters?.espacio) {
-          query = query.contains('space_types', [filters.espacio]);
-        }
-
-        if (filters?.aforo) {
-          query = query
-            .lte('capacity_min', filters.aforo)
-            .gte('capacity_max', filters.aforo);
-        }
-
-        if (filters?.evento) {
-          query = query.contains('event_types', [filters.evento]);
-        }
-
-        if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
-          query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
-        }
-
-        if (filters?.categoria) {
-          // Convert display category back to db enum
-          const dbCategoria = Object.entries(categoryMap)
-            .find(([_, displayName]) => displayName === filters.categoria)?.[0];
-          if (dbCategoria) {
-            query = query.eq('categoria', dbCategoria as 'montaje_tecnico' | 'decoracion_ambientacion' | 'catering' | 'mixologia_cocteleria' | 'arte_cultura' | 'audiovisuales' | 'mobiliario');
-          }
-        }
-
-        const { data, error: fetchError } = await query;
+        // Use RPC function for better performance and reliability
+        const { data, error: fetchError } = await supabase.rpc('get_products_by_filters', {
+          p_categoria: dbCategoria,
+          p_espacio: mode === 'filtered' ? filters?.espacio : null,
+          p_aforo: mode === 'filtered' ? filters?.aforo : null,
+          p_evento: mode === 'filtered' ? filters?.evento : null,
+          p_plan: mode === 'filtered' ? filters?.plan : null,
+          p_show_all: mode === 'all'
+        });
+        console.log('Query executed. Data:', data);
+        console.log('Query executed. Error:', fetchError);
 
         if (fetchError) {
+          console.error('Supabase query error:', fetchError);
           throw fetchError;
         }
 
         const mappedProducts = (data || []).map(mapDbProductToProduct);
         setProducts(mappedProducts);
+        
+        // Log for debugging in dev mode
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Products fetched (${mode} mode):`, {
+            filters,
+            count: mappedProducts.length,
+            category: filters?.categoria
+          });
+        }
       } catch (err) {
         console.error('Error fetching products:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(errorMessage);
+        
+        // Show toast with real error message
+        if (typeof window !== 'undefined') {
+          import('@/hooks/use-toast').then(({ toast }) => {
+            toast({
+              title: "Error al cargar productos",
+              description: `${errorMessage}`,
+              variant: "destructive"
+            });
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria]);
+  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria, mode]);
 
   return { products, loading, error };
 };

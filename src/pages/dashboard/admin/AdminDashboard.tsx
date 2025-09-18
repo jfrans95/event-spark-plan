@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Users, FileText, TrendingUp, Calendar, AlertCircle } from "lucide-react";
 import { StatusPill } from "@/components/common/StatusPill";
 import ProviderApplicationsList from "@/components/admin/ProviderApplicationsList";
+import InventarioGeneral from "@/pages/dashboard/admin/InventarioGeneral";
+import GestionPersonal from "@/pages/dashboard/admin/GestionPersonal";
 
 const AdminDashboard = () => {
   // Mock data
@@ -82,6 +84,8 @@ const AdminDashboard = () => {
           <TabsTrigger value="events">Eventos en Ejecución</TabsTrigger>
           <TabsTrigger value="quotes">Nuevas Solicitudes</TabsTrigger>
           <TabsTrigger value="providers">Solicitudes Alianzas</TabsTrigger>
+          <TabsTrigger value="inventory">Inventario Global</TabsTrigger>
+          <TabsTrigger value="personnel">Personal Global</TabsTrigger>
           <TabsTrigger value="analytics">Análisis y Reportes</TabsTrigger>
         </TabsList>
         
@@ -142,6 +146,14 @@ const AdminDashboard = () => {
         
         <TabsContent value="providers" className="space-y-4">
           <ProviderApplicationsList />
+        </TabsContent>
+        
+        <TabsContent value="inventory" className="space-y-4">
+          <InventarioGeneral />
+        </TabsContent>
+        
+        <TabsContent value="personnel" className="space-y-4">
+          <GestionPersonal />
         </TabsContent>
         
         <TabsContent value="analytics" className="space-y-4">
