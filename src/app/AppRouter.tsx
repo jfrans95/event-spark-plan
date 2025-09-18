@@ -4,9 +4,7 @@ import Partners from "@/pages/Partners";
 import Logout from "@/pages/Logout";
 import AuthTest from "@/pages/AuthTest";
 import Auth from "@/pages/Auth";
-import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
-import UserProfile from "@/pages/UserProfile";
 import SeedAdmin from "@/pages/SeedAdmin";
 import SeedDemo from "@/pages/SeedDemo";
 import Catalog from "@/pages/Catalog";
@@ -45,10 +43,7 @@ export const AppRouter = () => {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Index />} />
-      <Route path="/aliados" element={<Partners />} />
-      <Route path="/partners" element={<Partners />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/catalog" element={<Catalog />} />
@@ -60,13 +55,7 @@ export const AppRouter = () => {
       <Route path="/proveedor/registro" element={<ProviderRegistration />} />
       <Route path="/proveedor/solicitud-enviada" element={<ProviderApplicationPending />} />
 
-    <Route path="/user" element={
-      <PrivateRoute>
-        <UserProfile />
-      </PrivateRoute>
-    } />
-
-    {/* Dashboard redirect route */}
+      {/* Dashboard redirect route */}
       <Route path="/dashboard" element={
         <PrivateRoute>
           <Dashboard />

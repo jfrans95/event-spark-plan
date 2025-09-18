@@ -14,53 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      events: {
-        Row: {
-          created_at: string
-          event_date: string | null
-          event_location: string | null
-          event_time: string | null
-          id: string
-          quote_id: string
-          status: Database["public"]["Enums"]["event_status"]
-          tracking_code: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_date?: string | null
-          event_location?: string | null
-          event_time?: string | null
-          id?: string
-          quote_id: string
-          status?: Database["public"]["Enums"]["event_status"]
-          tracking_code: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          event_date?: string | null
-          event_location?: string | null
-          event_time?: string | null
-          id?: string
-          quote_id?: string
-          status?: Database["public"]["Enums"]["event_status"]
-          tracking_code?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products: {
         Row: {
           activo: boolean
@@ -260,193 +213,11 @@ export type Database = {
           },
         ]
       }
-      provider_requests: {
-        Row: {
-          created_at: string
-          event_id: string
-          id: string
-          meeting_1_completed: boolean | null
-          meeting_1_date: string | null
-          meeting_2_completed: boolean | null
-          meeting_2_date: string | null
-          meeting_3_completed: boolean | null
-          meeting_3_date: string | null
-          provider_id: string
-          quote_item_id: string
-          rating: number | null
-          rating_comment: string | null
-          shared_notes: string | null
-          status: Database["public"]["Enums"]["request_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          event_id: string
-          id?: string
-          meeting_1_completed?: boolean | null
-          meeting_1_date?: string | null
-          meeting_2_completed?: boolean | null
-          meeting_2_date?: string | null
-          meeting_3_completed?: boolean | null
-          meeting_3_date?: string | null
-          provider_id: string
-          quote_item_id: string
-          rating?: number | null
-          rating_comment?: string | null
-          shared_notes?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          event_id?: string
-          id?: string
-          meeting_1_completed?: boolean | null
-          meeting_1_date?: string | null
-          meeting_2_completed?: boolean | null
-          meeting_2_date?: string | null
-          meeting_3_completed?: boolean | null
-          meeting_3_date?: string | null
-          provider_id?: string
-          quote_item_id?: string
-          rating?: number | null
-          rating_comment?: string | null
-          shared_notes?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "provider_requests_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "provider_requests_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "provider_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "provider_requests_quote_item_id_fkey"
-            columns: ["quote_item_id"]
-            isOneToOne: false
-            referencedRelation: "quote_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quote_items: {
-        Row: {
-          created_at: string
-          id: string
-          product_id: string
-          quantity: number
-          quote_id: string
-          subtotal: number
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          product_id: string
-          quantity?: number
-          quote_id: string
-          subtotal: number
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          product_id?: string
-          quantity?: number
-          quote_id?: string
-          subtotal?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_items_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quotes: {
-        Row: {
-          contact_email: string
-          contact_name: string
-          contact_phone: string | null
-          contact_whatsapp: string | null
-          created_at: string
-          email_sent_at: string | null
-          event_date: string | null
-          event_location: string | null
-          event_time: string | null
-          id: string
-          pdf_url: string | null
-          status: Database["public"]["Enums"]["quote_status"]
-          total_amount: number
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          contact_email: string
-          contact_name: string
-          contact_phone?: string | null
-          contact_whatsapp?: string | null
-          created_at?: string
-          email_sent_at?: string | null
-          event_date?: string | null
-          event_location?: string | null
-          event_time?: string | null
-          id?: string
-          pdf_url?: string | null
-          status?: Database["public"]["Enums"]["quote_status"]
-          total_amount?: number
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          contact_email?: string
-          contact_name?: string
-          contact_phone?: string | null
-          contact_whatsapp?: string | null
-          created_at?: string
-          email_sent_at?: string | null
-          event_date?: string | null
-          event_location?: string | null
-          event_time?: string | null
-          id?: string
-          pdf_url?: string | null
-          status?: Database["public"]["Enums"]["quote_status"]
-          total_amount?: number
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      check_auth_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -495,7 +266,6 @@ export type Database = {
         | "arte_cultura"
         | "audiovisuales"
         | "mobiliario"
-      event_status: "creado" | "en_ejecucion" | "ejecutado" | "cancelado"
       event_type:
         | "celebraciones_internas"
         | "activaciones_marca"
@@ -512,8 +282,6 @@ export type Database = {
         | "encuentros_publicos"
         | "lanzamientos_aniversarios"
       plan_type: "basico" | "pro" | "premium"
-      quote_status: "enviada" | "ganada" | "perdida"
-      request_status: "recibida" | "aceptada" | "rechazada"
       space_type:
         | "parques_publicos"
         | "jardines_botanicos"
@@ -684,7 +452,6 @@ export const Constants = {
         "audiovisuales",
         "mobiliario",
       ],
-      event_status: ["creado", "en_ejecucion", "ejecutado", "cancelado"],
       event_type: [
         "celebraciones_internas",
         "activaciones_marca",
@@ -702,8 +469,6 @@ export const Constants = {
         "lanzamientos_aniversarios",
       ],
       plan_type: ["basico", "pro", "premium"],
-      quote_status: ["enviada", "ganada", "perdida"],
-      request_status: ["recibida", "aceptada", "rechazada"],
       space_type: [
         "parques_publicos",
         "jardines_botanicos",

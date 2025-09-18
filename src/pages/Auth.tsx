@@ -11,10 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
 import ProviderStatus from "@/components/ProviderStatus";
-import TestEmailButton from "@/components/TestEmailButton";
-import ResendConfirmationButton from "@/components/ResendConfirmationButton";
 
-type UserRole = 'administrator' | 'collaborator' | 'provider' | 'usuario';
+type UserRole = 'administrator' | 'collaborator' | 'provider';
 
 const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -106,9 +104,6 @@ const Auth = () => {
             navigate('/proveedor/registro');
             return;
           }
-        } else if (profile.role === 'collaborator' && user.user_metadata?.role === 'usuario') {
-          // Users registered as 'usuario' but mapped to 'collaborator' role
-          navigate('/user');
         } else {
           // Other roles, redirect to appropriate dashboard
           const roleRoutes = {
@@ -187,10 +182,7 @@ const Auth = () => {
     const role = formData.get('role') as UserRole;
 
     try {
-      // Set callback URL for email confirmation
-      const callbackUrl = `${window.location.origin}/auth/callback`;
-      const nextUrl = role === 'usuario' ? '/user' : '/proveedor/registro';
-      const redirectUrl = `${callbackUrl}?next=${encodeURIComponent(nextUrl)}`;
+      const redirectUrl = `${window.location.origin}/proveedor/registro`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -206,34 +198,9 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes('User already registered')) {
-          // User exists but hasn't confirmed email
           toast({
-            title: "Email ya registrado",
-            description: "Ya existe una cuenta con este email. Si no has confirmado tu email, revisa tu bandeja de entrada.",
-            variant: "destructive",
-          });
-          
-          // Try to resend confirmation
-          try {
-            await supabase.auth.resend({
-              type: 'signup',
-              email: email,
-              options: {
-                emailRedirectTo: redirectUrl
-              }
-            });
-            
-            toast({
-              title: "Email de confirmación reenviado",
-              description: "Hemos reenviado el correo de confirmación. Revisa tu bandeja de entrada y carpeta de spam.",
-            });
-          } catch (resendError) {
-            console.error('Resend error:', resendError);
-          }
-        } else if (error.message.includes('Email rate limit exceeded')) {
-          toast({
-            title: "Límite de emails excedido",
-            description: "Has solicitado demasiados emails. Espera unos minutos antes de intentar nuevamente.",
+            title: "Usuario ya registrado",
+            description: "Este email ya está registrado. Intenta iniciar sesión en su lugar.",
             variant: "destructive",
           });
         } else {
@@ -243,30 +210,20 @@ const Auth = () => {
             variant: "destructive",
           });
         }
-        } else {
-          if (data.user && !data.session) {
-            // Usuario creado pero necesita confirmar email
-            // Supabase enviará automáticamente el correo de confirmación
-            toast({
-              title: "¡Registro exitoso!",
-              description: "Revisa tu correo para confirmar tu cuenta. El enlace expira en 24 horas.",
-            });
-            setAuthMode('signin');
-          } else if (data.user && data.session) {
-            // Usuario creado y autenticado directamente (confirmaciones deshabilitadas)
-            // No hacer login inmediato, mostrar mensaje para confirmar
-            toast({
-              title: "¡Registro exitoso!",
-              description: "Revisa tu correo para confirmar tu cuenta.",
-            });
-            setAuthMode('signin');
-          }
+      } else {
+        if (data.user && !data.session) {
+          // Usuario creado pero necesita confirmar email
+          toast({
+            title: "Confirma tu email",
+            description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.",
+          });
+          setAuthMode('signin');
         }
-    } catch (error: any) {
-      console.error('Signup error:', error);
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Ocurrió un error inesperado. Inténtalo nuevamente.",
+        description: "Ocurrió un error inesperado",
         variant: "destructive",
       });
     } finally {
@@ -324,7 +281,6 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4 mt-6">
-                <ResendConfirmationButton />
                 <form onSubmit={(e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
@@ -414,11 +370,10 @@ const Auth = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona tu rol" />
                       </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="usuario">Usuario</SelectItem>
-                          <SelectItem value="collaborator">Colaborador</SelectItem>
-                          <SelectItem value="provider">Proveedor</SelectItem>
-                        </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="collaborator">Colaborador</SelectItem>
+                        <SelectItem value="provider">Proveedor</SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -439,9 +394,6 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-
-        {/* Test Email Component - Solo para debugging */}
-        <TestEmailButton />
       </div>
     </div>
   );
