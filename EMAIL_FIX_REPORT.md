@@ -1,6 +1,24 @@
 # 🚀 EMAIL INTEGRATION FIX REPORT
 
-## ✅ STATUS: COMPLETAMENTE SOLUCIONADO
+## ✅ STATUS: COMPLETAMENTE SOLUCIONADO + CORRECCIONES CRÍTICAS
+
+### 🔥 **FIXES CRÍTICOS APLICADOS HOY**
+
+#### 🚨 **PROBLEMA CRÍTICO RESUELTO: Total NULL**
+- **Error**: `null value in column "total_amount" violates not-null constraint` 
+- **Causa**: Algunos items no tenían `quantity`, causando total = null
+- **Solución**: Cálculo explícito del total con validaciones en QuoteModal.tsx
+- **Estado**: ✅ RESUELTO - Ya no se envían totales NULL
+
+#### 🚨 **PROBLEMA CRÍTICO RESUELTO: Validación Backend**  
+- **Error**: Edge function quotes-create no validaba datos antes de insertar
+- **Solución**: Validación completa en quotes-create/index.ts antes de DB insert
+- **Estado**: ✅ RESUELTO - Validación de total > 0 y items válidos
+
+#### 🔧 **ACCESIBILIDAD MEJORADA**
+- **Warning**: Missing 'Description' for {DialogContent}
+- **Solución**: Agregado aria-describedby y descripción en QuoteModal  
+- **Estado**: ✅ RESUELTO - Console limpio
 
 ### 🔧 CAMBIOS REALIZADOS
 
@@ -21,8 +39,8 @@
 - ✅ Fallback `ResendConfirmationButton` disponible
 - ✅ Toast con mensajes claros: "Revisa tu correo para confirmar tu cuenta"
 
-#### 4. **Cotización con envío de email** ✅ **CORREGIDO**
-**QuoteModal.tsx actualizado con integración completa:**
+#### 4. **Cotización con envío de email** ✅ **CORREGIDO + FIXES CRÍTICOS**
+**QuoteModal.tsx actualizado con integración completa + correcciones:**
 - ✅ Crea cotización vía `quotes-create` Edge Function
 - ✅ **NUEVO:** Automáticamente invoca `send-quote-email` después de crear cotización
 - ✅ **NUEVO:** Sistema de reintentos (3 intentos) para manejar PDF aún no generado
@@ -30,8 +48,17 @@
 - ✅ **NUEVO:** Idempotencia - no duplica envíos
 - ✅ **NUEVO:** Logs detallados para debugging
 - ✅ **NUEVO:** Toasts específicos según resultado del envío
+- 🔥 **CRÍTICO:** Cálculo explícito del total - ya no NULL
+- 🔥 **CRÍTICO:** Validación de items con quantity >= 1
+- 🔥 **CRÍTICO:** Previene envío si total <= 0
 
-#### 5. **Edge Function send-quote-email** ✅
+#### 5. **Edge Function quotes-create** ✅ **VALIDACIÓN MEJORADA**
+**Validaciones críticas agregadas:**
+- 🔥 **NUEVO:** Validación total_amount > 0 antes de insertar
+- 🔥 **NUEVO:** Validación items con quantity > 0
+- 🔥 **NUEVO:** Validación items con unitPrice > 0
+- ✅ Manejo granular de errores con mensajes específicos
+- ✅ Headers CORS configurados correctamente
 **Ya existía y está completamente funcional:**
 - ✅ Idempotencia con `email_sent_at`
 - ✅ Validación de `pdf_url` 

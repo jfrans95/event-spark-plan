@@ -43,6 +43,30 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate total amount
+    if (!body.total || body.total <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Total amount is required and must be greater than 0" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate items have quantities and prices
+    for (const item of body.items) {
+      if (!item.quantity || item.quantity <= 0) {
+        return new Response(
+          JSON.stringify({ error: "All items must have a quantity greater than 0" }), 
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!item.unitPrice || item.unitPrice <= 0) {
+        return new Response(
+          JSON.stringify({ error: "All items must have a valid unit price" }), 
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     

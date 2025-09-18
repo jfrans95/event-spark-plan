@@ -99,7 +99,23 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         });
       }
 
-      // Create the quote
+      // Create the quote - validate items and calculate total
+      if (items.length === 0) {
+        toast({ title: "Error", description: "No hay productos en tu cotización", variant: "destructive" });
+        return;
+      }
+
+      // Calculate total to ensure it's never null
+      const calculatedTotal = items.reduce((sum, item) => {
+        const itemTotal = (item.quantity || 1) * (item.product.price || 0);
+        return sum + itemTotal;
+      }, 0);
+
+      if (calculatedTotal <= 0) {
+        toast({ title: "Error", description: "El total de la cotización debe ser mayor a cero", variant: "destructive" });
+        return;
+      }
+
       const payload = {
         contact: {
           name: name || "",
@@ -113,10 +129,10 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         },
         items: items.map((item) => ({
           productId: item.product.id,
-          quantity: item.quantity,
-          unitPrice: item.product.price,
+          quantity: item.quantity || 1, // Ensure quantity is never missing
+          unitPrice: item.product.price || 0,
         })),
-        total,
+        total: calculatedTotal, // Use calculated total instead of context total
       };
 
       const { data, error } = await supabase.functions.invoke("quotes-create", {
@@ -226,9 +242,12 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent aria-describedby="quote-modal-description">
         <DialogHeader>
           <DialogTitle>Detalles para la cotización</DialogTitle>
+          <p id="quote-modal-description" className="text-sm text-muted-foreground">
+            Completa los datos de tu evento para generar tu cotización personalizada
+          </p>
         </DialogHeader>
         <form className="space-y-3" onSubmit={onSubmit}>
           {/* Datos del evento */}
