@@ -136,18 +136,74 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
       console.log('Quote creation response:', data);
 
-      // Check if quote was created successfully
+      // Check if quote was created successfully and send email
       if (data?.quoteId) {
-        toast({ 
-          title: "¡Cotización creada exitosamente!", 
-          description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} ha sido enviada a ${email}. Si no recibes el correo en unos minutos, revisa tu carpeta de spam.` 
-        });
+        console.log('Quote created successfully, attempting to send email...');
+        
+        // Wait for PDF to be generated before sending email
+        let emailSent = false;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!emailSent && attempts < maxAttempts) {
+          attempts++;
+          console.log(`Email attempt ${attempts}/${maxAttempts}`);
+          
+          try {
+            const { data: emailResponse, error: emailError } = await supabase.functions.invoke('send-quote-email', {
+              body: { 
+                quoteId: data.quoteId,
+                email: email,
+                name: name || email.split('@')[0]
+              }
+            });
+            
+            console.log('Email response:', emailResponse);
+            
+            if (emailError) {
+              console.error('Email error:', emailError);
+              if (emailError.message?.includes('PDF not ready') && attempts < maxAttempts) {
+                // Wait 2 seconds before retrying if PDF not ready
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                continue;
+              }
+              throw emailError;
+            }
+            
+            if (emailResponse?.success) {
+              emailSent = true;
+              if (emailResponse.alreadySent) {
+                toast({ 
+                  title: "¡Cotización creada exitosamente!", 
+                  description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} ya fue enviada anteriormente a ${email}.` 
+                });
+              } else {
+                toast({ 
+                  title: "¡Cotización enviada exitosamente!", 
+                  description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} ha sido enviada a ${email}. Si no recibes el correo en unos minutos, revisa tu carpeta de spam.` 
+                });
+              }
+            } else {
+              throw new Error(emailResponse?.error || 'Unknown email error');
+            }
+          } catch (emailErr: any) {
+            console.error(`Email attempt ${attempts} failed:`, emailErr);
+            if (attempts >= maxAttempts) {
+              toast({
+                title: "Cotización creada",
+                description: `Tu cotización ${data.quoteId.substring(0, 8).toUpperCase()} fue creada exitosamente, pero hubo un problema al enviar el correo: ${emailErr.message}. Te contactaremos por WhatsApp.`,
+                variant: "destructive"
+              });
+            }
+          }
+        }
       } else {
         toast({
-          title: "Cotización procesada",
-          description: "Tu cotización fue creada pero puede haber un problema con el envío del email. Te contactaremos por WhatsApp.",
+          title: "Error al crear cotización",
+          description: "No se pudo crear la cotización. Inténtalo de nuevo.",
           variant: "destructive"
         });
+        return;
       }
       
       clear();
