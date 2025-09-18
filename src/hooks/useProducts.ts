@@ -36,7 +36,7 @@ const mapDbProductToProduct = (dbProduct: any): Product => ({
   activo: dbProduct.activo
 });
 
-export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' = 'filtered') => {
+export const useProducts = (filters?: ProductFilters) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,25 +61,23 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
           .eq('activo', true)
           .eq('provider_profiles.provider_applications.status', 'approved');
 
-        // Apply filters only in 'filtered' mode
-        if (mode === 'filtered') {
-          if (filters?.espacio) {
-            query = query.contains('space_types', [filters.espacio]);
-          }
+        // Apply filters
+        if (filters?.espacio) {
+          query = query.contains('space_types', [filters.espacio]);
+        }
 
-          if (filters?.aforo) {
-            query = query
-              .lte('capacity_min', filters.aforo)
-              .gte('capacity_max', filters.aforo);
-          }
+        if (filters?.aforo) {
+          query = query
+            .lte('capacity_min', filters.aforo)
+            .gte('capacity_max', filters.aforo);
+        }
 
-          if (filters?.evento) {
-            query = query.contains('event_types', [filters.evento]);
-          }
+        if (filters?.evento) {
+          query = query.contains('event_types', [filters.evento]);
+        }
 
-          if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
-            query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
-          }
+        if (filters?.plan && ['basico', 'pro', 'premium'].includes(filters.plan)) {
+          query = query.eq('plan', filters.plan as 'basico' | 'pro' | 'premium');
         }
 
         if (filters?.categoria) {
@@ -99,37 +97,16 @@ export const useProducts = (filters?: ProductFilters, mode: 'filtered' | 'all' =
 
         const mappedProducts = (data || []).map(mapDbProductToProduct);
         setProducts(mappedProducts);
-        
-        // Log for debugging in dev mode
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Products fetched (${mode} mode):`, {
-            filters,
-            count: mappedProducts.length,
-            category: filters?.categoria
-          });
-        }
       } catch (err) {
         console.error('Error fetching products:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-        setError(errorMessage);
-        
-        // Show toast with real error message
-        if (typeof window !== 'undefined') {
-          import('@/hooks/use-toast').then(({ toast }) => {
-            toast({
-              title: "Error al cargar productos",
-              description: errorMessage,
-              variant: "destructive"
-            });
-          });
-        }
+        setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria, mode]);
+  }, [filters?.espacio, filters?.aforo, filters?.evento, filters?.plan, filters?.categoria]);
 
   return { products, loading, error };
 };

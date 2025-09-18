@@ -23,45 +23,45 @@ const Auth = () => {
   const [pendingProviderUser, setPendingProviderUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  // Check if user is already authenticated when component mounts
+  // Auth state management
   useEffect(() => {
-    const checkExistingSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log('User already authenticated, showing notification and redirecting...');
-        toast({
-          title: "Ya tienes sesión activa",
-          description: "Redirigiendo al dashboard...",
-        });
-        
-        // Wait a moment so user can see the message
-        setTimeout(async () => {
-          await handleUserRedirection(session.user);
-        }, 1500);
-        return;
-      }
-      
-      // No existing session, user can proceed with login
-      setLoading(false);
-    };
-    
-    // Start with loading true to prevent showing login form immediately
-    setLoading(true);
-    checkExistingSession();
-    
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Only redirect on successful sign in, not on session refresh
         if (event === 'SIGNED_IN' && session?.user) {
           await handleUserRedirection(session.user);
         } else if (event === 'SIGNED_OUT') {
+          // Clear any loading states when signed out
           setLoading(false);
         }
       }
     );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      // Validate the session if it exists
+      if (session?.user) {
+        try {
+          const { data: authUser, error } = await supabase.auth.getUser();
+          if (error || !authUser.user) {
+            // Invalid session, sign out
+            await supabase.auth.signOut();
+          } else {
+            await handleUserRedirection(session.user);
+          }
+        } catch (error) {
+          console.error('Error validating session:', error);
+          await supabase.auth.signOut();
+        }
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -231,20 +231,6 @@ const Auth = () => {
     }
   };
 
-
-  // If user is loading or already authenticated, show loading screen
-  if (loading || session) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <div className="text-lg">
-            {session ? 'Ya tienes sesión activa, redirigiendo...' : 'Verificando autenticación...'}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">

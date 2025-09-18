@@ -35,7 +35,7 @@ export const Header = () => {
               MVP v1.0
             </Badge>
             <Button variant="outline" size="sm" className="gap-2" asChild>
-              <Link to="/auth">
+              <Link to="/aliados">
                 <Users className="w-4 h-4" />
                 Aliados
               </Link>

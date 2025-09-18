@@ -1,311 +1,364 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Search, Users } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { StatusPill } from "@/components/common/StatusPill";
 import { RoleBadge } from "@/components/common/RoleBadge";
-
-interface UserProfile {
-  id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  created_at: string;
-  provider_info?: {
-    company_name: string;
-    status: string;
-    reviewed_at: string | null;
-  };
-}
+import { toast } from "@/hooks/use-toast";
+import { CheckCircle, XCircle, UserPlus, UserX, UserCheck } from "lucide-react";
 
 const GestionPersonal = () => {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [suspensionReason, setSuspensionReason] = useState("");
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          full_name,
-          email,
-          role,
-          created_at
-        `);
-
-      if (profilesError) throw profilesError;
-
-      // Fetch provider applications for providers
-      const { data: providerApps, error: providerError } = await supabase
-        .from('provider_applications')
-        .select(`
-          user_id,
-          company_name,
-          status,
-          reviewed_at
-        `);
-
-      if (providerError) throw providerError;
-
-      // Combine data
-      const mappedUsers = profiles.map(profile => {
-        const providerInfo = providerApps.find(app => app.user_id === profile.id);
-        
-        return {
-          id: profile.id,
-          full_name: profile.full_name || 'Sin nombre',
-          email: profile.email,
-          role: profile.role,
-          created_at: profile.created_at,
-          provider_info: providerInfo ? {
-            company_name: providerInfo.company_name,
-            status: providerInfo.status,
-            reviewed_at: providerInfo.reviewed_at
-          } : undefined
-        };
-      });
-
-      setUsers(mappedUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: "Error al cargar personal",
-        description: error instanceof Error ? error.message : "Error desconocido",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+  // Mock data
+  const providerApplications = [
+    {
+      id: 1,
+      companyName: "Eventos Premium",
+      contactName: "Juan Pérez",
+      email: "juan@eventospremium.com",
+      phone: "301-555-0123",
+      category: "Catering",
+      status: "pending",
+      submittedDate: "2024-01-10"
+    },
+    {
+      id: 2,
+      companyName: "Sonido Pro",
+      contactName: "María García",
+      email: "maria@sonidopro.com",
+      phone: "302-555-0456",
+      category: "Audiovisuales",
+      status: "pending",
+      submittedDate: "2024-01-12"
     }
+  ];
+
+  const profiles = [
+    {
+      id: 1,
+      name: "Ana Martínez",
+      email: "ana.martinez@company.com",
+      role: "advisor",
+      status: "active",
+      createdDate: "2023-12-01"
+    },
+    {
+      id: 2,
+      name: "Carlos López",
+      email: "carlos.lopez@company.com",
+      role: "collaborator",
+      status: "active",
+      createdDate: "2023-11-15"
+    },
+    {
+      id: 3,
+      name: "Laura Rodríguez",
+      email: "laura.rodriguez@company.com",
+      role: "provider",
+      status: "suspended",
+      createdDate: "2023-10-20"
+    }
+  ];
+
+  const handleApproveApplication = (application: any) => {
+    toast({
+      title: "Solicitud Aprobada",
+      description: `${application.companyName} ha sido aprobado como proveedor.`,
+    });
+    setSelectedApplication(null);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.provider_info?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    
-    const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "approved" && user.provider_info?.status === "approved") ||
-                         (statusFilter === "pending" && user.provider_info?.status === "pending") ||
-                         (statusFilter === "rejected" && user.provider_info?.status === "rejected") ||
-                         (statusFilter === "no_application" && !user.provider_info);
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-
-  // Calculate stats
-  const roleCounts = users.reduce((acc, user) => {
-    acc[user.role] = (acc[user.role] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const providerStats = users.filter(u => u.role === 'provider').reduce((acc, user) => {
-    if (user.provider_info) {
-      acc[user.provider_info.status] = (acc[user.provider_info.status] || 0) + 1;
-    } else {
-      acc['no_application'] = (acc['no_application'] || 0) + 1;
+  const handleRejectApplication = (application: any) => {
+    if (!rejectionReason.trim()) {
+      toast({
+        title: "Error",
+        description: "Debe proporcionar un motivo de rechazo.",
+        variant: "destructive",
+      });
+      return;
     }
-    return acc;
-  }, {} as Record<string, number>);
+    
+    toast({
+      title: "Solicitud Rechazada",
+      description: `${application.companyName} ha sido rechazado.`,
+    });
+    setSelectedApplication(null);
+    setRejectionReason("");
+  };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Cargando personal...</span>
-      </div>
-    );
-  }
+  const handleToggleProfileStatus = (profile: any) => {
+    if (!suspensionReason.trim() && profile.status === "active") {
+      toast({
+        title: "Error",
+        description: "Debe proporcionar una justificación para suspender al usuario.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newStatus = profile.status === "active" ? "suspended" : "active";
+    const action = newStatus === "suspended" ? "suspendido" : "habilitado";
+    
+    toast({
+      title: `Usuario ${action}`,
+      description: `${profile.name} ha sido ${action}.`,
+    });
+    setSelectedProfile(null);
+    setSuspensionReason("");
+  };
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Personal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.provider || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {providerStats.approved || 0} aprobados
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Colaboradores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.collaborator || 0}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Asesores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.advisor || 0}</div>
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="text-2xl font-bold">Gestión de Personal</h2>
+        <p className="text-muted-foreground">
+          Administra solicitudes de alianza y cuentas de usuarios
+        </p>
       </div>
 
-      {/* Main Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Gestión de Personal
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre, email o empresa..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Rol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los roles</SelectItem>
-                <SelectItem value="administrator">Admin ({roleCounts.administrator || 0})</SelectItem>
-                <SelectItem value="advisor">Asesor ({roleCounts.advisor || 0})</SelectItem>
-                <SelectItem value="collaborator">Colaborador ({roleCounts.collaborator || 0})</SelectItem>
-                <SelectItem value="provider">Proveedor ({roleCounts.provider || 0})</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="approved">Aprobados</SelectItem>
-                <SelectItem value="pending">Pendientes</SelectItem>
-                <SelectItem value="rejected">Rechazados</SelectItem>
-                <SelectItem value="no_application">Sin aplicación</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <Tabs defaultValue="applications" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="applications">Solicitudes de Alianza</TabsTrigger>
+          <TabsTrigger value="accounts">Gestión de Cuentas</TabsTrigger>
+          <TabsTrigger value="create">Crear Perfiles</TabsTrigger>
+        </TabsList>
 
-          {/* Users Table */}
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Empresa/Estado</TableHead>
-                  <TableHead>Fecha Registro</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUsers.map(user => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.full_name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <RoleBadge role={user.role as any} />
-                    </TableCell>
-                    <TableCell>
-                      {user.provider_info ? (
-                        <div className="space-y-1">
-                          <div className="font-medium text-sm">{user.provider_info.company_name}</div>
-                          <Badge 
-                            variant={user.provider_info.status === 'approved' ? 'default' : 
-                                   user.provider_info.status === 'pending' ? 'secondary' : 'destructive'}
-                          >
-                            {user.provider_info.status === 'approved' ? 'Aprobado' :
-                             user.provider_info.status === 'pending' ? 'Pendiente' : 'Rechazado'}
-                          </Badge>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString('es-CO')}
-                    </TableCell>
-                  </TableRow>
+        <TabsContent value="applications" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Solicitudes de Proveedores</CardTitle>
+              <CardDescription>
+                Revisa y aprueba nuevas solicitudes de alianza
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {providerApplications.map((app) => (
+                  <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-1">
+                      <p className="font-medium">{app.companyName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {app.contactName} • {app.category} • {app.submittedDate}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{app.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleApproveApplication(app)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Aceptar
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => setSelectedApplication(app)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Rechazar
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Siguiente
+        <TabsContent value="accounts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cuentas de Usuario</CardTitle>
+              <CardDescription>
+                Gestiona el estado de las cuentas de usuarios
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Rol</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Fecha Creación</TableHead>
+                    <TableHead>Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {profiles.map((profile) => (
+                    <TableRow key={profile.id}>
+                      <TableCell className="font-medium">{profile.name}</TableCell>
+                      <TableCell>{profile.email}</TableCell>
+                      <TableCell>
+                        <RoleBadge role={profile.role as any} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusPill status={profile.status === "active" ? "done" : "suspended"} />
+                      </TableCell>
+                      <TableCell>{profile.createdDate}</TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant={profile.status === "active" ? "destructive" : "default"}
+                          onClick={() => setSelectedProfile(profile)}
+                        >
+                          {profile.status === "active" ? (
+                            <>
+                              <UserX className="w-4 h-4 mr-1" />
+                              Suspender
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              Habilitar
+                            </>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="create" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Crear Nuevo Perfil</CardTitle>
+              <CardDescription>
+                Registra manualmente nuevos asesores y administradores
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Nombre</Label>
+                  <Input id="firstName" placeholder="Ingresa el nombre" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Apellido</Label>
+                  <Input id="lastName" placeholder="Ingresa el apellido" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cedula">Cédula</Label>
+                  <Input id="cedula" placeholder="Número de cédula" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Celular</Label>
+                  <Input id="phone" placeholder="Número de teléfono" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="age">Edad</Label>
+                  <Input id="age" type="number" placeholder="Edad" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">Ciudad</Label>
+                  <Input id="city" placeholder="Ciudad de residencia" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="email">Correo Electrónico</Label>
+                  <Input id="email" type="email" placeholder="correo@ejemplo.com" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input id="password" type="password" placeholder="Contraseña temporal" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="resume">Hoja de Vida</Label>
+                  <Input id="resume" type="file" accept=".pdf,.doc,.docx" />
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button className="w-full">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Registrar Nuevo Perfil
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Rejection Dialog */}
+      <Dialog open={!!selectedApplication} onOpenChange={() => setSelectedApplication(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechazar Solicitud</DialogTitle>
+            <DialogDescription>
+              Proporciona un motivo para rechazar la solicitud de {selectedApplication?.companyName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Motivo del rechazo (requerido)"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedApplication(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleRejectApplication(selectedApplication)}
+            >
+              Confirmar Rechazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspension Dialog */}
+      <Dialog open={!!selectedProfile} onOpenChange={() => setSelectedProfile(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedProfile?.status === "active" ? "Suspender" : "Habilitar"} Usuario
+            </DialogTitle>
+            <DialogDescription>
+              {selectedProfile?.status === "active" 
+                ? `Proporciona una justificación para suspender a ${selectedProfile?.name}`
+                : `¿Estás seguro de que deseas habilitar a ${selectedProfile?.name}?`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProfile?.status === "active" && (
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Justificación de la suspensión (requerido)"
+                value={suspensionReason}
+                onChange={(e) => setSuspensionReason(e.target.value)}
+              />
             </div>
           )}
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedProfile(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant={selectedProfile?.status === "active" ? "destructive" : "default"}
+              onClick={() => handleToggleProfileStatus(selectedProfile)}
+            >
+              {selectedProfile?.status === "active" ? "Suspender" : "Habilitar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
