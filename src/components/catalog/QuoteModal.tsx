@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { usePackage } from "@/context/PackageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import QuoteSuccess from "./QuoteSuccess";
 
 interface Props {
   open: boolean;
@@ -16,13 +15,6 @@ interface Props {
 const QuoteModal = ({ open, onOpenChange }: Props) => {
   const { items, total, clear } = usePackage();
   const [loading, setLoading] = useState(false);
-  const [quoteSuccess, setQuoteSuccess] = useState<{
-    quoteId: string;
-    trackingCode: string;
-    pdfUrl: string | null;
-    email: string;
-    total: number;
-  } | null>(null);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -108,59 +100,76 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
     setLoading(true);
     try {
-      // Use the new consolidated quote-submit function
-      const { data: quoteData, error: quoteError } = await supabase.functions.invoke("quote-submit", {
+      // Create quote
+      const { data: quoteData, error: quoteError } = await supabase.functions.invoke("quotes-create", {
         body: payload,
-        headers: {
-          "idempotency-key": `quote-${Date.now()}-${payload.contact.email}`
-        }
       });
 
       if (quoteError) {
-        console.error("Quote submission error:", quoteError);
+        console.error("Quote creation error:", quoteError);
         throw quoteError;
       }
 
-      console.log("Quote submitted successfully:", quoteData);
+      console.log("Quote created successfully:", quoteData);
 
-      const { quoteId, trackingCode, pdfUrl, emailSent, emailError } = quoteData;
+      const { quoteId, pdfUrl } = quoteData;
 
       if (!quoteId) {
         throw new Error("No quote ID received");
       }
 
-      // Handle email sending result
-      if (!emailSent && emailError) {
-        toast({
-          title: "Cotización creada",
-          description: "Tu cotización se creó exitosamente, pero hubo un problema enviando el email. Contacta a soporte.",
-          variant: "destructive"
-        });
-      } else if (emailSent) {
-        console.log("Email sent successfully with quote");
-      }
-
-      // Success - use the PDF URL from the response directly (it's already public URL from public-assets bucket)
-      const finalPdfUrl = pdfUrl;
+      // Send email notification with retry logic
+      const sendEmailWithRetry = async (retryCount = 0): Promise<void> => {
+        const maxRetries = 3;
         
-      setQuoteSuccess({
-        quoteId,
-        trackingCode,
-        pdfUrl: finalPdfUrl,
-        email: payload.contact.email,
-        total: payload.total
-      });
+        try {
+          console.log(`Attempting to send email (attempt ${retryCount + 1})`);
+          
+          const { error: emailError } = await supabase.functions.invoke("send-quote-email", {
+            body: {
+              quoteId,
+              email: payload.contact.email,
+              pdfUrl,
+              customerName: payload.contact.email // You could add a name field to the form
+            },
+          });
 
-      const successMessage = emailSent 
-        ? `Cotización ${quoteId.slice(0, 8)} creada. Revisa tu email para el PDF.`
-        : `Cotización ${quoteId.slice(0, 8)} creada. El PDF estará disponible en tu panel de usuario.`;
+          if (emailError) {
+            console.error("Email error:", emailError);
+            
+            if (retryCount < maxRetries - 1) {
+              console.log("Retrying email send...");
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+              return sendEmailWithRetry(retryCount + 1);
+            } else {
+              throw emailError;
+            }
+          }
 
+          console.log("Email sent successfully");
+        } catch (error) {
+          console.error("Email send failed after retries:", error);
+          // Don't fail the whole process if email fails
+          toast({
+            title: "Cotización creada",
+            description: "Tu cotización se ha creado, pero hubo un problema enviando el email. Contacta a soporte.",
+            variant: "destructive"
+          });
+          return;
+        }
+      };
+
+      // Send email notification
+      await sendEmailWithRetry();
+
+      // Success
       toast({ 
         title: "¡Cotización enviada!", 
-        description: successMessage
+        description: `Cotización ${quoteId} creada. Revisa tu email para el PDF.`
       });
 
       clear();
+      onOpenChange(false);
       form.reset();
 
     } catch (e: any) {
@@ -176,80 +185,67 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
     }
   };
 
-  const handleClose = () => {
-    setQuoteSuccess(null);
-    onOpenChange(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {quoteSuccess ? "¡Cotización Enviada!" : "Solicitar Cotización"}
-          </DialogTitle>
+          <DialogTitle>Solicitar Cotización</DialogTitle>
         </DialogHeader>
         
-        {quoteSuccess ? (
-          <QuoteSuccess {...quoteSuccess} />
-        ) : (
-          <>
-            {/* Summary */}
-            <div className="border rounded-lg p-4 bg-muted/50">
-              <h4 className="font-medium mb-2">Resumen del pedido</h4>
-              <div className="space-y-1 text-sm">
-                {items.map((item) => (
-                  <div key={item.product.id} className="flex justify-between">
-                    <span>{item.product.name} x{item.quantity}</span>
-                    <span>${(item.product.price * item.quantity).toLocaleString()}</span>
-                  </div>
-                ))}
+        {/* Summary */}
+        <div className="border rounded-lg p-4 bg-muted/50">
+          <h4 className="font-medium mb-2">Resumen del pedido</h4>
+          <div className="space-y-1 text-sm">
+            {items.map((item) => (
+              <div key={item.product.id} className="flex justify-between">
+                <span>{item.product.name} x{item.quantity}</span>
+                <span>${(item.product.price * item.quantity).toLocaleString()}</span>
               </div>
-              <div className="border-t pt-2 mt-2 font-bold flex justify-between">
-                <span>Total:</span>
-                <span>${total.toLocaleString()}</span>
-              </div>
-            </div>
+            ))}
+          </div>
+          <div className="border-t pt-2 mt-2 font-bold flex justify-between">
+            <span>Total:</span>
+            <span>${total.toLocaleString()}</span>
+          </div>
+        </div>
 
-            <form className="space-y-4" onSubmit={onSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="date">Fecha del evento *</Label>
-                  <Input id="date" name="date" type="date" required />
-                </div>
-                <div>
-                  <Label htmlFor="time">Hora *</Label>
-                  <Input id="time" name="time" type="time" required />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="location">Lugar del evento *</Label>
-                <Input id="location" name="location" placeholder="Dirección o lugar del evento" required />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" name="email" type="email" required />
-                </div>
-                <div>
-                  <Label htmlFor="whatsapp">WhatsApp *</Label>
-                  <Input id="whatsapp" name="whatsapp" type="tel" placeholder="+57 300 123 4567" required />
-                </div>
-              </div>
-              
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="consent" required /> 
-                Acepto ser contactado por WhatsApp para coordinar mi evento *
-              </label>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Procesando..." : "Enviar Cotización"}
-              </Button>
-            </form>
-          </>
-        )}
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">Fecha del evento *</Label>
+              <Input id="date" name="date" type="date" required />
+            </div>
+            <div>
+              <Label htmlFor="time">Hora *</Label>
+              <Input id="time" name="time" type="time" required />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="location">Lugar del evento *</Label>
+            <Input id="location" name="location" placeholder="Dirección o lugar del evento" required />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input id="email" name="email" type="email" required />
+            </div>
+            <div>
+              <Label htmlFor="whatsapp">WhatsApp *</Label>
+              <Input id="whatsapp" name="whatsapp" type="tel" placeholder="+57 300 123 4567" required />
+            </div>
+          </div>
+          
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="consent" required /> 
+            Acepto ser contactado por WhatsApp para coordinar mi evento *
+          </label>
+          
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Procesando..." : "Enviar Cotización"}
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

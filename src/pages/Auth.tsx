@@ -1,55 +1,147 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heart, LogIn, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ArrowLeft } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { User, Session } from "@supabase/supabase-js";
+import ProviderStatus from "@/components/ProviderStatus";
+
+type UserRole = 'administrator' | 'collaborator' | 'provider';
 
 const Auth = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-  const [selectedRole, setSelectedRole] = useState("usuario");
-  
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showProviderForm, setShowProviderForm] = useState(false);
+  const [pendingProviderUser, setPendingProviderUser] = useState<User | null>(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('next') || '/user';
 
+  // Check if user is already authenticated when component mounts
   useEffect(() => {
-    document.title = "Iniciar Sesión | EventCraft";
-    
-    // Check if user is already logged in
-    const checkAuth = async () => {
+    const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate(redirectTo);
+        console.log('User already authenticated, showing notification and redirecting...');
+        toast({
+          title: "Ya tienes sesión activa",
+          description: "Redirigiendo al dashboard...",
+        });
+        
+        // Wait a moment so user can see the message
+        setTimeout(async () => {
+          await handleUserRedirection(session.user);
+        }, 1500);
+        return;
       }
+      
+      // No existing session, user can proceed with login
+      setLoading(false);
     };
     
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate(redirectTo);
+    // Start with loading true to prevent showing login form immediately
+    setLoading(true);
+    checkExistingSession();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          await handleUserRedirection(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          setLoading(false);
+        }
       }
-    });
+    );
 
     return () => subscription.unsubscribe();
-  }, [navigate, redirectTo]);
+  }, [navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
+  // Helper function to handle user redirection based on role
+  const handleUserRedirection = async (user: any) => {
+    // Add a small delay to prevent flickering
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
 
+      if (profile?.role) {
+        // For providers, check their application status
+        if (profile.role === 'provider') {
+          const { data: application } = await supabase
+            .from('provider_applications')
+            .select('status')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!application) {
+            // No application, redirect to registration
+            navigate('/proveedor/registro');
+            return;
+          } else if (application.status === 'pending') {
+            // Application pending, show pending page
+            navigate('/proveedor/solicitud-enviada');
+            return;
+          } else if (application.status === 'approved') {
+            // Approved, go to dashboard
+            navigate('/dashboard/proveedor');
+            return;
+          } else {
+            // Rejected, back to registration
+            navigate('/proveedor/registro');
+            return;
+          }
+        } else {
+          // Other roles, redirect to appropriate dashboard
+          const roleRoutes = {
+            administrator: '/dashboard/admin',
+            admin: '/dashboard/admin',
+            advisor: '/dashboard/asesor', 
+            asesor: '/dashboard/asesor',
+            collaborator: '/dashboard/colaborador',
+            colaborador: '/dashboard/colaborador'
+          };
+          
+          const targetRoute = roleRoutes[profile.role as keyof typeof roleRoutes] || '/dashboard';
+          navigate(targetRoute);
+        }
+        
+        toast({
+          title: "Bienvenido",
+          description: "Has iniciado sesión correctamente",
+        });
+      } else {
+        // Fallback to general dashboard
+        navigate("/dashboard");
+        toast({
+          title: "Bienvenido", 
+          description: "Has iniciado sesión correctamente",
+        });
+      }
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+      navigate("/dashboard");
+    }
+  };
+
+  const handleSignIn = async (formData: FormData) => {
     setLoading(true);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -59,67 +151,47 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast({
-            title: "Error de acceso",
-            description: "Email o contraseña incorrectos",
-            variant: "destructive"
+            title: "Error de autenticación",
+            description: "Credenciales incorrectas. Verifica tu email y contraseña.",
+            variant: "destructive",
           });
         } else {
           toast({
             title: "Error",
             description: error.message,
-            variant: "destructive"
+            variant: "destructive",
           });
         }
-        return;
       }
-
-      toast({
-        title: "¡Bienvenido!",
-        description: "Has iniciado sesión exitosamente"
-      });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo iniciar sesión. Inténtalo de nuevo.",
-        variant: "destructive"
+        description: "Ocurrió un error inesperado",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !confirmPassword) return;
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Error", 
-        description: "La contraseña debe tener al menos 6 caracteres",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleSignUp = async (formData: FormData) => {
     setLoading(true);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const fullName = formData.get('fullName') as string;
+    const role = formData.get('role') as UserRole;
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const redirectUrl = `${window.location.origin}/proveedor/registro`;
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${selectedRole === 'provider' ? '/proveedor/registro' : '/user'}`,
-          data: { 
-            role: selectedRole 
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+            role: role,
           }
         }
       });
@@ -127,185 +199,199 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('User already registered')) {
           toast({
-            title: "Usuario existente",
-            description: "Ya existe una cuenta con este email. Intenta iniciar sesión.",
-            variant: "destructive"
+            title: "Usuario ya registrado",
+            description: "Este email ya está registrado. Intenta iniciar sesión en su lugar.",
+            variant: "destructive",
           });
-          setAuthMode("signin");
         } else {
           toast({
-            title: "Error al registrarse",
+            title: "Error",
             description: error.message,
-            variant: "destructive"
+            variant: "destructive",
           });
         }
-        return;
+      } else {
+        if (data.user && !data.session) {
+          // Usuario creado pero necesita confirmar email
+          toast({
+            title: "Confirma tu email",
+            description: "Te hemos enviado un correo de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.",
+          });
+          setAuthMode('signin');
+        }
       }
-
-      toast({
-        title: "¡Registro exitoso!",
-        description: "Revisa tu correo electrónico para confirmar tu cuenta.",
-      });
-      
-      // Clear form
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo crear la cuenta. Inténtalo de nuevo.",
-        variant: "destructive"
+        description: "Ocurrió un error inesperado",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/')} className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
-          </Button>
+
+  // If user is loading or already authenticated, show loading screen
+  if (loading || session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <div className="text-lg">
+            {session ? 'Ya tienes sesión activa, redirigiendo...' : 'Verificando autenticación...'}
+          </div>
         </div>
-        
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
+            <Heart className="w-7 h-7 text-white" />
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">EventCraft</h1>
+            <p className="text-sm text-muted-foreground">Acceso para aliados</p>
+          </div>
+        </div>
+
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">EventCraft</CardTitle>
+            <CardTitle>Acceso al Sistema</CardTitle>
             <CardDescription>
-              Accede a tu cuenta para gestionar tus cotizaciones
+              Inicia sesión o regístrate como aliado de EventCraft
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as "signin" | "signup")}>
+            <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'signin' | 'signup')}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="signup">Registrarse</TabsTrigger>
+                <TabsTrigger value="signin" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Iniciar Sesión
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Registrarse
+                </TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="signin" className="space-y-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div>
+
+              <TabsContent value="signin" className="space-y-4 mt-6">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  handleSignIn(formData);
+                }} className="space-y-4">
+                  <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <Input
                       id="signin-email"
+                      name="email"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="tu@email.com"
                       required
+                      disabled={loading}
                     />
                   </div>
-                  
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="signin-password">Contraseña</Label>
                     <Input
                       id="signin-password"
+                      name="password"
                       type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Tu contraseña"
+                      placeholder="••••••••"
                       required
+                      disabled={loading}
                     />
                   </div>
-                  
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Iniciando sesión...
                       </>
                     ) : (
                       <>
-                        <Lock className="h-4 w-4 mr-2" />
+                        <LogIn className="w-4 h-4 mr-2" />
                         Iniciar Sesión
                       </>
                     )}
                   </Button>
                 </form>
               </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div>
+
+              <TabsContent value="signup" className="space-y-4 mt-6">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  handleSignUp(formData);
+                }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nombre completo</Label>
+                    <Input
+                      id="signup-name"
+                      name="fullName"
+                      type="text"
+                      placeholder="Tu nombre completo"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
+                      name="email"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="tu@email.com"
                       required
+                      disabled={loading}
                     />
                   </div>
-                  
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="signup-password">Contraseña</Label>
                     <Input
                       id="signup-password"
+                      name="password"
                       type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="••••••••"
                       required
+                      minLength={6}
+                      disabled={loading}
                     />
                   </div>
-                  
-                   <div>
-                     <Label htmlFor="confirm-password">Confirmar contraseña</Label>
-                     <Input
-                       id="confirm-password"
-                       type="password"
-                       value={confirmPassword}
-                       onChange={(e) => setConfirmPassword(e.target.value)}
-                       placeholder="Confirma tu contraseña"
-                       required
-                     />
-                   </div>
-
-                   <div>
-                     <Label>¿Qué tipo de cuenta deseas?</Label>
-                     <RadioGroup value={selectedRole} onValueChange={setSelectedRole} className="mt-2">
-                       <div className="flex items-center space-x-2">
-                         <RadioGroupItem value="usuario" id="usuario" />
-                         <Label htmlFor="usuario">Usuario (cliente)</Label>
-                       </div>
-                       <div className="flex items-center space-x-2">
-                         <RadioGroupItem value="provider" id="provider" />
-                         <Label htmlFor="provider">Proveedor</Label>
-                       </div>
-                     </RadioGroup>
-                   </div>
-                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-role">Tipo de aliado</Label>
+                    <Select name="role" required disabled={loading}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona tu rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="collaborator">Colaborador</SelectItem>
+                        <SelectItem value="provider">Proveedor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>  
-                        Creando cuenta...
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Registrando...
                       </>
                     ) : (
                       <>
-                        <User className="h-4 w-4 mr-2" />
-                        Crear Cuenta
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Registrarse
                       </>
                     )}
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
-            
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                ¿Quieres ser proveedor? {" "}
-                <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/auth/provider')}>
-                  Regístrate aquí
-                </Button>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

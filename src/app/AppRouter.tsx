@@ -4,14 +4,11 @@ import Partners from "@/pages/Partners";
 import Logout from "@/pages/Logout";
 import AuthTest from "@/pages/AuthTest";
 import Auth from "@/pages/Auth";
-import AuthProvider from "@/pages/AuthProvider";
-import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import SeedAdmin from "@/pages/SeedAdmin";
 import SeedDemo from "@/pages/SeedDemo";
 import Catalog from "@/pages/Catalog";
 import Track from "@/pages/Track";
-import UserDashboard from "@/pages/UserDashboard";
 import NotFound from "@/pages/NotFound";
 
 // Role-specific layouts and pages
@@ -47,18 +44,10 @@ export const AppRouter = () => {
       {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/auth/provider" element={<AuthProvider />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/catalog" element={<Catalog />} />
       <Route path="/track/:code" element={<Track />} />
-      <Route path="/tracking/:code" element={<Track />} />
-      <Route path="/user" element={
-        <PrivateRoute>
-          <UserDashboard />
-        </PrivateRoute>
-      } />
       <Route path="/seed-admin" element={<SeedAdmin />} />
       <Route path="/seed-demo" element={<SeedDemo />} />
       

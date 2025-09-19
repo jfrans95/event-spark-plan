@@ -3,17 +3,11 @@ project_id = "uuioedhcwydmtoywyvtq"
 [functions.seed-admin]
 verify_jwt = false
 
-[functions.quote-submit]
-verify_jwt = false
-
 [functions.quotes-create]
 verify_jwt = false
 
 [functions.send-quote-email]
 verify_jwt = false
-
-[functions.quote-claim]
-verify_jwt = true
 
 [functions.health-email]
 verify_jwt = false
@@ -23,3 +17,5 @@ verify_jwt = false
 
 [functions.inbox-create]
 verify_jwt = false
+
+
