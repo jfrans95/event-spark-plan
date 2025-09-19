@@ -98,5 +98,5 @@ order by max(qi.created_at) desc limit 10;
 
 ---
 
-**Status**: 🔴 **CRÍTICO** - Email sending completamente fallido por API key inválida
-**Próximo paso**: Configurar RESEND_API_KEY válida antes de proceder con desarrollo
+**Status**: 🟢 **RESUELTO** - RESEND_API_KEY actualizada, flujo end-to-end implementado
+**Próximo paso**: Probar el flujo completo: cotización → email → registro → claim automático

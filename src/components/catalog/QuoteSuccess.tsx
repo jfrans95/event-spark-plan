@@ -78,6 +78,11 @@ const QuoteSuccess = ({ quoteId, trackingCode, pdfUrl, email, total }: QuoteSucc
         title: "¡Cuenta creada!",
         description: "Revisa tu correo para confirmar tu cuenta. Después podrás ver todas tus cotizaciones.",
       });
+
+      // Auto-redirect to login after account creation
+      setTimeout(() => {
+        navigate('/auth');
+      }, 3000);
     } catch (error: any) {
       console.error("Account creation error:", error);
       toast({

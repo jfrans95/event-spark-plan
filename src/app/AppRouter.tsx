@@ -4,6 +4,7 @@ import Partners from "@/pages/Partners";
 import Logout from "@/pages/Logout";
 import AuthTest from "@/pages/AuthTest";
 import Auth from "@/pages/Auth";
+import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import SeedAdmin from "@/pages/SeedAdmin";
 import SeedDemo from "@/pages/SeedDemo";
@@ -45,7 +46,7 @@ export const AppRouter = () => {
       {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/auth/callback" element={<Auth />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/catalog" element={<Catalog />} />

@@ -108,67 +108,37 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
     setLoading(true);
     try {
-      // Create quote
-      const { data: quoteData, error: quoteError } = await supabase.functions.invoke("quotes-create", {
+      // Use the new consolidated quote-submit function
+      const { data: quoteData, error: quoteError } = await supabase.functions.invoke("quote-submit", {
         body: payload,
+        headers: {
+          "idempotency-key": `quote-${Date.now()}-${payload.contact.email}`
+        }
       });
 
       if (quoteError) {
-        console.error("Quote creation error:", quoteError);
+        console.error("Quote submission error:", quoteError);
         throw quoteError;
       }
 
-      console.log("Quote created successfully:", quoteData);
+      console.log("Quote submitted successfully:", quoteData);
 
-      const { quoteId, trackingCode, pdfUrl } = quoteData;
+      const { quoteId, trackingCode, pdfUrl, emailSent, emailError } = quoteData;
 
       if (!quoteId) {
         throw new Error("No quote ID received");
       }
 
-      // Send email notification with retry logic
-      const sendEmailWithRetry = async (retryCount = 0): Promise<void> => {
-        const maxRetries = 3;
-        
-        try {
-          console.log(`Attempting to send email (attempt ${retryCount + 1})`);
-          
-          const { error: emailError } = await supabase.functions.invoke("send-quote-email", {
-            body: {
-              quoteId,
-              email: payload.contact.email,
-              pdfUrl,
-              customerName: payload.contact.email // You could add a name field to the form
-            },
-          });
-
-          if (emailError) {
-            console.error("Email error:", emailError);
-            
-            if (retryCount < maxRetries - 1) {
-              console.log("Retrying email send...");
-              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
-              return sendEmailWithRetry(retryCount + 1);
-            } else {
-              throw emailError;
-            }
-          }
-
-          console.log("Email sent successfully");
-        } catch (error) {
-          console.error("Email send failed after retries:", error);
-          // Don't fail the whole process if email fails
-          toast({
-            title: "Cotización creada",
-            description: "Tu cotización se ha creado, pero hubo un problema enviando el email. Contacta a soporte.",
-            variant: "destructive"
-          });
-          return;
-        }
-      };
-
-      // Send email notification
-      await sendEmailWithRetry();
+      // Handle email sending result
+      if (!emailSent && emailError) {
+        toast({
+          title: "Cotización creada",
+          description: "Tu cotización se creó exitosamente, pero hubo un problema enviando el email. Contacta a soporte.",
+          variant: "destructive"
+        });
+      } else if (emailSent) {
+        console.log("Email sent successfully with quote");
+      }
 
       // Success
       setQuoteSuccess({
@@ -179,9 +149,13 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         total: payload.total
       });
 
+      const successMessage = emailSent 
+        ? `Cotización ${quoteId.slice(0, 8)} creada. Revisa tu email para el PDF.`
+        : `Cotización ${quoteId.slice(0, 8)} creada. El PDF estará disponible en tu panel de usuario.`;
+
       toast({ 
         title: "¡Cotización enviada!", 
-        description: `Cotización ${quoteId} creada. Revisa tu email para el PDF.`
+        description: successMessage
       });
 
       clear();

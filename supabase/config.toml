@@ -1,6 +1,9 @@
-project_id = "uuioedhcwydmtoywytq"
+project_id = "uuioedhcwydmtoywyvtq"
 
 [functions.seed-admin]
+verify_jwt = false
+
+[functions.quote-submit]
 verify_jwt = false
 
 [functions.quotes-create]
@@ -20,5 +23,3 @@ verify_jwt = false
 
 [functions.inbox-create]
 verify_jwt = false
-
-
