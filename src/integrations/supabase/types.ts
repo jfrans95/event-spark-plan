@@ -220,6 +220,7 @@ export type Database = {
           product_id: string
           quantity: number
           quote_id: string
+          subtotal: number | null
           unit_price: number
         }
         Insert: {
@@ -228,6 +229,7 @@ export type Database = {
           product_id: string
           quantity?: number
           quote_id: string
+          subtotal?: number | null
           unit_price: number
         }
         Update: {
@@ -236,6 +238,7 @@ export type Database = {
           product_id?: string
           quantity?: number
           quote_id?: string
+          subtotal?: number | null
           unit_price?: number
         }
         Relationships: [
@@ -264,8 +267,11 @@ export type Database = {
           event_location: string | null
           event_time: string | null
           id: string
+          pdf_path: string | null
           pdf_url: string | null
+          status: string
           total_amount: number
+          tracking_code: string
           updated_at: string
           user_id: string | null
         }
@@ -277,8 +283,11 @@ export type Database = {
           event_location?: string | null
           event_time?: string | null
           id?: string
+          pdf_path?: string | null
           pdf_url?: string | null
+          status?: string
           total_amount?: number
+          tracking_code?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -290,8 +299,11 @@ export type Database = {
           event_location?: string | null
           event_time?: string | null
           id?: string
+          pdf_path?: string | null
           pdf_url?: string | null
+          status?: string
           total_amount?: number
+          tracking_code?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -338,6 +350,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_quote_tracking: {
+        Args: { _code: string }
+        Returns: {
+          created_at: string
+          quote_id: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role:
@@ -346,6 +366,7 @@ export type Database = {
         | "provider"
         | "admin"
         | "advisor"
+        | "usuario"
       category_type:
         | "montaje_tecnico"
         | "decoracion_ambientacion"
@@ -530,6 +551,7 @@ export const Constants = {
         "provider",
         "admin",
         "advisor",
+        "usuario",
       ],
       category_type: [
         "montaje_tecnico",
