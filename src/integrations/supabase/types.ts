@@ -265,7 +265,9 @@ export type Database = {
           event_time: string | null
           id: string
           pdf_url: string | null
+          status: string
           total_amount: number
+          tracking_code: string
           updated_at: string
           user_id: string | null
         }
@@ -278,7 +280,9 @@ export type Database = {
           event_time?: string | null
           id?: string
           pdf_url?: string | null
+          status?: string
           total_amount?: number
+          tracking_code?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -291,7 +295,9 @@ export type Database = {
           event_time?: string | null
           id?: string
           pdf_url?: string | null
+          status?: string
           total_amount?: number
+          tracking_code?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -336,6 +342,14 @@ export type Database = {
           provider_name: string
           space_types: Database["public"]["Enums"]["space_type"][]
           updated_at: string
+        }[]
+      }
+      get_quote_tracking: {
+        Args: { _code: string }
+        Returns: {
+          created_at: string
+          quote_id: string
+          status: string
         }[]
       }
     }
