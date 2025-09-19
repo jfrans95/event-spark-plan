@@ -6,6 +6,9 @@ import { BrowserRouter } from "react-router-dom";
 import { PackageProvider } from "@/context/PackageContext";
 import { AppRouter } from "@/app/AppRouter";
 
+// Import test utilities for debugging
+import '@/utils/testHealthAndQuote';
+
 const queryClient = new QueryClient();
 
 const App = () => (

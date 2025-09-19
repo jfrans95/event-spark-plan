@@ -140,11 +140,14 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         console.log("Email sent successfully with quote");
       }
 
-      // Success
+      // Success - ensure PDF URL is properly constructed
+      const finalPdfUrl = pdfUrl || (quoteData.pdf_path ? 
+        `https://uuioedhcwydmtoywyvtq.supabase.co/storage/v1/object/public/${quoteData.pdf_path}` : null);
+        
       setQuoteSuccess({
         quoteId,
         trackingCode,
-        pdfUrl,
+        pdfUrl: finalPdfUrl,
         email: payload.contact.email,
         total: payload.total
       });

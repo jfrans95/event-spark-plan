@@ -338,20 +338,96 @@ Deno.serve(async (req) => {
 
 // Helper function to generate PDF content
 function generateQuotePDF(payload: QuotePayload, quote: any): Uint8Array {
-  // Simple PDF content - in production use a proper PDF library
-  const pdfHeader = "%PDF-1.4\n";
-  const content = `
-COTIZACIÓN #${quote.id}
+  // Create a proper PDF structure with better formatting
+  const date = new Date().toLocaleDateString('es-CO');
+  const pdfContent = `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
 
-Cliente: ${payload.contact.email}
-Fecha: ${new Date().toLocaleDateString()}
-Total: $${payload.total.toLocaleString()}
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
 
-ITEMS:
-${payload.items.map(item => `- ${item.name} (${item.qty}x) - $${(item.price * item.qty).toLocaleString()}`).join('\n')}
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
 
-EventCraft - Cotización generada automáticamente
-  `;
-  
-  return new TextEncoder().encode(pdfHeader + content);
+4 0 obj
+<<
+/Length 800
+>>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+(COTIZACIÓN EVENTCRAFT) Tj
+0 -30 Td
+(Código: #${quote.id?.slice(0, 8) || 'N/A'}) Tj
+0 -20 Td
+(Fecha: ${date}) Tj
+0 -20 Td
+(Cliente: ${payload.contact.email}) Tj
+0 -30 Td
+(DETALLES DEL EVENTO:) Tj
+0 -20 Td
+(Fecha: ${payload.event.date} - ${payload.event.time}) Tj
+0 -20 Td
+(Ubicación: ${payload.event.location}) Tj
+0 -30 Td
+(PRODUCTOS COTIZADOS:) Tj
+${payload.items.map((item, index) => 
+  `0 -20 Td\n(${index + 1}. ${item.name.substring(0, 40)} - Cant: ${item.qty} - $${(item.price * item.qty).toLocaleString()}) Tj`
+).join('\n')}
+0 -30 Td
+(TOTAL: $${payload.total.toLocaleString()}) Tj
+0 -40 Td
+(¡Gracias por confiar en EventCraft!) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000274 00000 n 
+0000001125 00000 n 
+trailer
+<<
+/Root 1 0 R
+/Size 6
+>>
+startxref
+1185
+%%EOF`;
+
+  return new TextEncoder().encode(pdfContent);
 }
