@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type Category =
-  | "Montaje técnico"
-  | "Decoración/ambientación"
+  | "Montaje Técnico"
+  | "Decoración/Ambientación"
   | "Catering"
   | "Mixología/coctelería"
-  | "Arte/cultura"
+  | "Arte/Cultura"
   | "Audiovisuales"
   | "Mobiliario";
 
@@ -93,11 +93,11 @@ export const PackageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const groupedByCategory = useMemo(() => {
     const groups = {
-      "Montaje técnico": [],
-      "Decoración/ambientación": [],
+      "Montaje Técnico": [],
+      "Decoración/Ambientación": [],
       "Catering": [],
       "Mixología/coctelería": [],
-      "Arte/cultura": [],
+      "Arte/Cultura": [],
       "Audiovisuales": [],
       "Mobiliario": [],
     } as Record<Category, PackageItem[]>;

@@ -1,56 +1,67 @@
-# Email Configuration Setup Guide
+# Configuración de Email - Setup Completo
 
-## Overview
-This guide helps you configure email functionality for quote notifications and user registration confirmations.
-
-## Required Configuration
+## ⚠️ CONFIGURACIÓN OBLIGATORIA
 
 ### 1. Supabase Authentication Settings
-Go to your Supabase Dashboard → Authentication → Configuration:
+**Ve a tu Dashboard de Supabase → Authentication → Configuration:**
 
-- **Site URL**: `https://event-spark-plan.lovable.app` (or your production domain)
-- **Redirect URLs**: Keep existing ones (should include your domain variations)
-- **Enable Email Confirmations**: ✅ Enabled (for registration flow)
+**Site URL (CRÍTICO):**
+```
+https://event-spark-plan.lovable.app
+```
 
-### 2. Resend Configuration
+**Redirect URLs (añadir TODAS estas):**
+```
+https://event-spark-plan.lovable.app/**
+https://preview--event-spark-plan.lovable.app/**
+https://id-preview--*.lovable.app/**
+https://*.lovableproject.com/**
+```
 
-#### If you DON'T have a verified domain:
-- Use the default sender: `Eventix <onboarding@resend.dev>`
-- This works out of the box for testing
+**Email Settings:**
+- ✅ **Enable Email Confirmations** = ON
+- ✅ Verificar que templates usen `{{ .ConfirmationURL }}`
 
-#### If you HAVE a verified domain:
-1. Go to [Resend Dashboard](https://resend.com/domains)
-2. Verify your domain
-3. Update the `from` field in `send-quote-email` function:
+### 2. Resend API Configuration
+
+**Si NO tienes dominio verificado:**
+- Usa el sender por defecto: `Eventix <onboarding@resend.dev>`
+- Funciona inmediatamente para testing
+
+**Si TIENES dominio verificado:**
+1. Ve a [Resend Dashboard](https://resend.com/domains)
+2. Verifica tu dominio  
+3. Actualiza el `from` en la función `send-quote-email`:
    ```typescript
-   from: "Eventix <cotizaciones@yourdomain.com>",
+   from: "Eventix <cotizaciones@tudominio.com>",
    ```
 
-### 3. Resend API Key
-Make sure your `RESEND_API_KEY` is set in Supabase secrets:
-- Go to Supabase Dashboard → Edge Functions → Manage secrets
-- Add `RESEND_API_KEY` with your Resend API key
+### 3. API Key de Resend
+**Ve a Supabase Dashboard → Edge Functions → Manage secrets y añade:**
+- `RESEND_API_KEY` con tu API key de [Resend](https://resend.com/api-keys)
 
-## Health Check
+## 🧪 TESTING
 
-Use the health check endpoint to verify configuration:
-
-### Manual Test:
+### Health Check Manual:
 ```bash
 curl https://uuioedhcwydmtoywyvtq.supabase.co/functions/v1/health-email
 ```
 
-### In-App Test Button:
-Create a simple test button in your admin panel:
+### Testing desde Browser (Recomendado):
+**Abre la consola del navegador (F12) y ejecuta:**
 
-```typescript
-const checkEmailHealth = async () => {
-  const { data } = await supabase.functions.invoke('health-email');
-  console.log('Email health:', data);
-};
+```javascript
+// 1. Probar configuración de email
+await testEmailConfiguration()
+
+// 2. Probar flujo completo de cotización  
+await testQuoteFlow()
+
+// 3. Probar filtros de productos
+await testProductFiltering()
 ```
 
-## Expected Response:
+### Respuesta Esperada (health-email):
 ```json
 {
   "ok": true,
@@ -60,50 +71,52 @@ const checkEmailHealth = async () => {
     "SUPABASE_URL": true,
     "SUPABASE_SERVICE_ROLE_KEY": true
   },
-  "message": "All email configuration is ready",
-  "required_actions": []
+  "message": "All email configuration is ready"
 }
 ```
 
-## Troubleshooting Common Issues
+## 🐛 SOLUCIÓN DE PROBLEMAS
 
-### 1. Emails not sending
-- Check RESEND_API_KEY is correctly set
-- Verify domain is approved in Resend (if using custom domain)
-- Check Edge Function logs for detailed errors
+### Emails no llegan:
+1. ✅ Verificar `RESEND_API_KEY` en Supabase secrets
+2. ✅ Si usas dominio propio, verificar que esté aprobado en Resend
+3. ✅ Revisar logs: **Edge Functions → send-quote-email → Logs**
+4. ✅ Probar `testEmailConfiguration()` en consola
 
-### 2. Registration emails not arriving
-- Confirm "Enable email confirmations" is ON in Supabase Auth settings
-- Check spam folder
-- Verify redirect URLs include your domain
+### Registro no envía confirmación:
+1. ✅ Confirmar "Enable email confirmations" = ON  
+2. ✅ Verificar redirect URLs incluyen tu dominio
+3. ✅ Revisar carpeta spam
+4. ✅ Probar con otro email
 
-### 3. Quote emails fail
-- Check console logs in browser dev tools
-- Verify the quote was created in database
-- Test health-email endpoint
+### Cotizaciones fallan:
+1. ✅ Verificar que existan productos con `activo = true`
+2. ✅ Probar `testQuoteFlow()` en consola  
+3. ✅ Revisar logs: **Edge Functions → quotes-create → Logs**
+4. ✅ Verificar datos en tabla `quotes`
 
-## Edge Function Logs
+### Catálogo vacío:
+1. ✅ Verificar productos: `SELECT COUNT(*) FROM products WHERE activo = true`
+2. ✅ Probar `testProductFiltering()` en consola
+3. ✅ Revisar que filtros no sean muy restrictivos
+4. ✅ Cambiar a "Ver todos los productos"
 
-To view detailed logs:
-1. Go to Supabase Dashboard → Edge Functions
-2. Click on function name (send-quote-email, quotes-create)
-3. View logs tab for error details
+## 📊 VERIFICACIÓN FINAL
 
-## Testing Checklist
+### Checklist Completo:
+- [ ] Site URL configurado en Supabase Auth
+- [ ] Redirect URLs incluyen dominios de Lovable  
+- [ ] `RESEND_API_KEY` configurado en secrets
+- [ ] `testEmailConfiguration()` retorna `ok: true`
+- [ ] Registro envía email de confirmación
+- [ ] Cotización crea registros en BD y envía email
+- [ ] Catálogo muestra productos filtrados correctamente
 
-✅ Registration sends confirmation email  
-✅ Quote creation works (check database)  
-✅ Quote email is sent and received  
-✅ Health endpoint returns `ok: true`  
-✅ Edge function logs show no errors  
-
-## Production Notes
-
-- Use your own verified domain for better deliverability
-- Monitor Resend usage and limits
-- Set up proper error alerting for failed emails
-- Consider implementing email templates for better branding
+### Datos de Prueba Disponibles:
+- 🏢 **Proveedores:** 2 aprobados con productos activos
+- 📦 **Productos:** ~13 productos en múltiples categorías  
+- 🎯 **Filtros específicos:** Para `/catalog?espacio=parques_publicos&evento=eventos_pequenos&plan=basico&aforo=80`
 
 ---
 
-*Last updated: January 2025*
+**💡 Tip:** Usa las funciones de test en la consola para debug rápido. Todos los logs aparecen en la consola del navegador.

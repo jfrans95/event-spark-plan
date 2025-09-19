@@ -16,11 +16,11 @@ import { toast } from "@/hooks/use-toast";
 import { getSpaceTypeLabel, getEventTypeLabel, getPlanLabel } from "@/constants/productTags";
 
 const CATEGORIES: Category[] = [
-  "Montaje técnico",
-  "Decoración/ambientación",
+  "Montaje Técnico",
+  "Decoración/Ambientación", 
   "Catering",
   "Mixología/coctelería",
-  "Arte/cultura",
+  "Arte/Cultura",
   "Audiovisuales",
   "Mobiliario",
 ];
@@ -35,7 +35,7 @@ interface Filters {
 const Catalog = () => {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<Category>("Montaje técnico");
+  const [activeCategory, setActiveCategory] = useState<Category>("Montaje Técnico");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [editEventOpen, setEditEventOpen] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);

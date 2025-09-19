@@ -16,10 +16,10 @@ const categoryMap: Record<string, string> = {
   'montaje_tecnico': 'Montaje Técnico',
   'decoracion_ambientacion': 'Decoración/Ambientación',
   'mobiliario': 'Mobiliario',
-  'cocteleria': 'Coctelería',
+  'mixologia_cocteleria': 'Mixología/coctelería',
   'catering': 'Catering',
   'arte_cultura': 'Arte/Cultura',
-  'registros_audiovisuales': 'Audiovisuales'
+  'audiovisuales': 'Audiovisuales'
 };
 
 // Reverse mapping from display names to database enums
@@ -30,15 +30,14 @@ const displayToDbMap: Record<string, string> = {
   'decoración/ambientación': 'decoracion_ambientacion',
   'Mobiliario': 'mobiliario',
   'mobiliario': 'mobiliario',
-  'Coctelería': 'cocteleria',
-  'coctelería': 'cocteleria',
-  'mixología/coctelería': 'cocteleria', // Legacy mapping
+  'Mixología/coctelería': 'mixologia_cocteleria',
+  'mixología/coctelería': 'mixologia_cocteleria',
   'Catering': 'catering',
   'catering': 'catering',
   'Arte/Cultura': 'arte_cultura',
   'arte/cultura': 'arte_cultura',
-  'Audiovisuales': 'registros_audiovisuales',
-  'audiovisuales': 'registros_audiovisuales'
+  'Audiovisuales': 'audiovisuales',
+  'audiovisuales': 'audiovisuales'
 };
 
 const mapDbProductToProduct = (dbProduct: any): Product => ({
