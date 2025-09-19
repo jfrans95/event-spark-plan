@@ -267,6 +267,7 @@ export type Database = {
           event_location: string | null
           event_time: string | null
           id: string
+          pdf_path: string | null
           pdf_url: string | null
           status: string
           total_amount: number
@@ -282,6 +283,7 @@ export type Database = {
           event_location?: string | null
           event_time?: string | null
           id?: string
+          pdf_path?: string | null
           pdf_url?: string | null
           status?: string
           total_amount?: number
@@ -297,6 +299,7 @@ export type Database = {
           event_location?: string | null
           event_time?: string | null
           id?: string
+          pdf_path?: string | null
           pdf_url?: string | null
           status?: string
           total_amount?: number
@@ -363,6 +366,7 @@ export type Database = {
         | "provider"
         | "admin"
         | "advisor"
+        | "usuario"
       category_type:
         | "montaje_tecnico"
         | "decoracion_ambientacion"
@@ -547,6 +551,7 @@ export const Constants = {
         "provider",
         "admin",
         "advisor",
+        "usuario",
       ],
       category_type: [
         "montaje_tecnico",

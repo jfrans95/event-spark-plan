@@ -7,21 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Building } from "lucide-react";
 
-const Auth = () => {
+const AuthProvider = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('next') || '/user';
+  const redirectTo = searchParams.get('next') || '/proveedor/registro';
 
   useEffect(() => {
-    document.title = "Iniciar Sesión | EventCraft";
+    document.title = "Registro de Proveedores | EventCraft";
     
     // Check if user is already logged in
     const checkAuth = async () => {
@@ -89,7 +90,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) return;
+    if (!email || !password || !confirmPassword || !fullName) return;
     
     if (password !== confirmPassword) {
       toast({
@@ -115,9 +116,10 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/user`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
           data: { 
-            role: 'usuario' 
+            full_name: fullName,
+            role: 'provider'
           }
         }
       });
@@ -142,13 +144,14 @@ const Auth = () => {
 
       toast({
         title: "¡Registro exitoso!",
-        description: "Revisa tu correo electrónico para confirmar tu cuenta.",
+        description: "Revisa tu correo electrónico para confirmar tu cuenta como proveedor.",
       });
       
       // Clear form
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setFullName("");
       
     } catch (error: any) {
       toast({
@@ -173,9 +176,12 @@ const Auth = () => {
         
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">EventCraft</CardTitle>
+            <CardTitle className="text-2xl flex items-center justify-center gap-2">
+              <Building className="h-6 w-6" />
+              EventCraft Proveedores
+            </CardTitle>
             <CardDescription>
-              Accede a tu cuenta para gestionar tus cotizaciones
+              Únete como proveedor y ofrece tus servicios para eventos
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -188,9 +194,9 @@ const Auth = () => {
               <TabsContent value="signin" className="space-y-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div>
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="provider-signin-email">Email</Label>
                     <Input
-                      id="signin-email"
+                      id="provider-signin-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -200,9 +206,9 @@ const Auth = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="signin-password">Contraseña</Label>
+                    <Label htmlFor="provider-signin-password">Contraseña</Label>
                     <Input
-                      id="signin-password"
+                      id="provider-signin-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -230,9 +236,21 @@ const Auth = () => {
               <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div>
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="provider-signup-name">Nombre completo</Label>
                     <Input
-                      id="signup-email"
+                      id="provider-signup-name"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Tu nombre completo"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="provider-signup-email">Email</Label>
+                    <Input
+                      id="provider-signup-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -242,9 +260,9 @@ const Auth = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="signup-password">Contraseña</Label>
+                    <Label htmlFor="provider-signup-password">Contraseña</Label>
                     <Input
-                      id="signup-password"
+                      id="provider-signup-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -254,9 +272,9 @@ const Auth = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                    <Label htmlFor="provider-confirm-password">Confirmar contraseña</Label>
                     <Input
-                      id="confirm-password"
+                      id="provider-confirm-password"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -273,8 +291,8 @@ const Auth = () => {
                       </>
                     ) : (
                       <>
-                        <User className="h-4 w-4 mr-2" />
-                        Crear Cuenta
+                        <Building className="h-4 w-4 mr-2" />
+                        Registrarse como Proveedor
                       </>
                     )}
                   </Button>
@@ -284,8 +302,8 @@ const Auth = () => {
             
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                ¿Quieres ser proveedor? {" "}
-                <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/auth/provider')}>
+                ¿Eres cliente? {" "}
+                <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/auth')}>
                   Regístrate aquí
                 </Button>
               </p>
@@ -297,4 +315,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default AuthProvider;

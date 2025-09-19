@@ -2,6 +2,8 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 
+const PDF_BUCKET = 'quote-pdfs';
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
@@ -186,16 +188,40 @@ Deno.serve(async (req) => {
       console.log(`Created ${quoteItems.length} quote items`);
     }
 
-    // Generate simple PDF URL (we'll use a placeholder for now since PDF generation is complex)
-    const pdfUrl = `${SUPABASE_URL}/storage/v1/object/public/public-assets/quote-${quoteId}.pdf`;
+    // Generate PDF and upload to quote-pdfs bucket
+    const pdfPath = `quote-${quoteId}.pdf`;
     
-    // Update quote with PDF URL
+    console.log("Generating PDF...");
+    // Generate simple PDF content
+    const pdfContent = generateQuotePDF(payload, quoteData);
+    
+    // Upload PDF to storage
+    const { error: uploadError } = await supabase.storage
+      .from(PDF_BUCKET)
+      .upload(pdfPath, pdfContent, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error("PDF upload failed:", uploadError);
+    }
+
+    // Get public URL for PDF
+    const { data: { publicUrl } } = supabase.storage
+      .from(PDF_BUCKET)
+      .getPublicUrl(pdfPath);
+
+    // Update quote with PDF path and URL
     await supabase
       .from("quotes")
-      .update({ pdf_url: pdfUrl })
+      .update({ 
+        pdf_path: `${PDF_BUCKET}/${pdfPath}`,
+        pdf_url: publicUrl 
+      })
       .eq("id", quoteId);
 
-    console.log("PDF URL set:", pdfUrl);
+    console.log("PDF URL set:", publicUrl);
 
     // Send email notification
     console.log("Sending email notification...");
@@ -225,6 +251,14 @@ Deno.serve(async (req) => {
                   `<li>${item.name} - Cantidad: ${item.qty} - $${(item.price * item.qty).toLocaleString()}</li>`
                 ).join('')}
               </ul>
+            </div>
+
+            <div style="margin: 20px 0; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
+              <p><strong>📄 Tu cotización en PDF:</strong></p>
+              <a href="${publicUrl}" 
+                 style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
+                Descargar Cotización PDF
+              </a>
             </div>
 
             <p>Puedes hacer seguimiento de tu cotización usando este enlace:</p>
@@ -262,7 +296,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           quoteId,
           trackingCode,
-          pdfUrl,
+          pdfUrl: publicUrl,
           emailSent: false,
           emailError: emailError.message || "Failed to send email"
         }),
@@ -279,7 +313,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         quoteId,
         trackingCode,
-        pdfUrl,
+        pdfUrl: publicUrl,
         emailSent: true,
         total: payload.total,
         itemCount: payload.items.length
@@ -301,3 +335,23 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+// Helper function to generate PDF content
+function generateQuotePDF(payload: QuotePayload, quote: any): Uint8Array {
+  // Simple PDF content - in production use a proper PDF library
+  const pdfHeader = "%PDF-1.4\n";
+  const content = `
+COTIZACIÓN #${quote.id}
+
+Cliente: ${payload.contact.email}
+Fecha: ${new Date().toLocaleDateString()}
+Total: $${payload.total.toLocaleString()}
+
+ITEMS:
+${payload.items.map(item => `- ${item.name} (${item.qty}x) - $${(item.price * item.qty).toLocaleString()}`).join('\n')}
+
+EventCraft - Cotización generada automáticamente
+  `;
+  
+  return new TextEncoder().encode(pdfHeader + content);
+}
