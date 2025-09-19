@@ -207,20 +207,21 @@ Deno.serve(async (req) => {
       console.error("Failed to update quote with PDF URL:", updateError);
     }
 
-    console.log("=== QUOTES-CREATE SUCCESS ===");
-    
-    return new Response(
-      JSON.stringify({ 
-        quoteId: quote.id, 
-        pdfUrl: pdfUrl,
-        total: body.total,
-        itemCount: body.items.length
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
-    );
+        console.log("=== QUOTES-CREATE SUCCESS ===");
+        
+        return new Response(
+          JSON.stringify({ 
+            quoteId: quote.id,
+            trackingCode: quote.tracking_code,
+            pdfUrl: pdfUrl,
+            total: body.total,
+            itemCount: body.items.length
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
 
   } catch (error: any) {
     console.error("=== QUOTES-CREATE ERROR ===", error);

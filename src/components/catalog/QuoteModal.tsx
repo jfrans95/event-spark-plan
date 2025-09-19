@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { usePackage } from "@/context/PackageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import QuoteSuccess from "./QuoteSuccess";
 
 interface Props {
   open: boolean;
@@ -15,6 +16,13 @@ interface Props {
 const QuoteModal = ({ open, onOpenChange }: Props) => {
   const { items, total, clear } = usePackage();
   const [loading, setLoading] = useState(false);
+  const [quoteSuccess, setQuoteSuccess] = useState<{
+    quoteId: string;
+    trackingCode: string;
+    pdfUrl: string | null;
+    email: string;
+    total: number;
+  } | null>(null);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,7 +120,7 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
 
       console.log("Quote created successfully:", quoteData);
 
-      const { quoteId, pdfUrl } = quoteData;
+      const { quoteId, trackingCode, pdfUrl } = quoteData;
 
       if (!quoteId) {
         throw new Error("No quote ID received");
@@ -163,13 +171,20 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
       await sendEmailWithRetry();
 
       // Success
+      setQuoteSuccess({
+        quoteId,
+        trackingCode,
+        pdfUrl,
+        email: payload.contact.email,
+        total: payload.total
+      });
+
       toast({ 
         title: "¡Cotización enviada!", 
         description: `Cotización ${quoteId} creada. Revisa tu email para el PDF.`
       });
 
       clear();
-      onOpenChange(false);
       form.reset();
 
     } catch (e: any) {
@@ -185,67 +200,80 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
     }
   };
 
+  const handleClose = () => {
+    setQuoteSuccess(null);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Solicitar Cotización</DialogTitle>
+          <DialogTitle>
+            {quoteSuccess ? "¡Cotización Enviada!" : "Solicitar Cotización"}
+          </DialogTitle>
         </DialogHeader>
         
-        {/* Summary */}
-        <div className="border rounded-lg p-4 bg-muted/50">
-          <h4 className="font-medium mb-2">Resumen del pedido</h4>
-          <div className="space-y-1 text-sm">
-            {items.map((item) => (
-              <div key={item.product.id} className="flex justify-between">
-                <span>{item.product.name} x{item.quantity}</span>
-                <span>${(item.product.price * item.quantity).toLocaleString()}</span>
+        {quoteSuccess ? (
+          <QuoteSuccess {...quoteSuccess} />
+        ) : (
+          <>
+            {/* Summary */}
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <h4 className="font-medium mb-2">Resumen del pedido</h4>
+              <div className="space-y-1 text-sm">
+                {items.map((item) => (
+                  <div key={item.product.id} className="flex justify-between">
+                    <span>{item.product.name} x{item.quantity}</span>
+                    <span>${(item.product.price * item.quantity).toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="border-t pt-2 mt-2 font-bold flex justify-between">
-            <span>Total:</span>
-            <span>${total.toLocaleString()}</span>
-          </div>
-        </div>
+              <div className="border-t pt-2 mt-2 font-bold flex justify-between">
+                <span>Total:</span>
+                <span>${total.toLocaleString()}</span>
+              </div>
+            </div>
 
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Fecha del evento *</Label>
-              <Input id="date" name="date" type="date" required />
-            </div>
-            <div>
-              <Label htmlFor="time">Hora *</Label>
-              <Input id="time" name="time" type="time" required />
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="location">Lugar del evento *</Label>
-            <Input id="location" name="location" placeholder="Dirección o lugar del evento" required />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" name="email" type="email" required />
-            </div>
-            <div>
-              <Label htmlFor="whatsapp">WhatsApp *</Label>
-              <Input id="whatsapp" name="whatsapp" type="tel" placeholder="+57 300 123 4567" required />
-            </div>
-          </div>
-          
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="consent" required /> 
-            Acepto ser contactado por WhatsApp para coordinar mi evento *
-          </label>
-          
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Procesando..." : "Enviar Cotización"}
-          </Button>
-        </form>
+            <form className="space-y-4" onSubmit={onSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="date">Fecha del evento *</Label>
+                  <Input id="date" name="date" type="date" required />
+                </div>
+                <div>
+                  <Label htmlFor="time">Hora *</Label>
+                  <Input id="time" name="time" type="time" required />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="location">Lugar del evento *</Label>
+                <Input id="location" name="location" placeholder="Dirección o lugar del evento" required />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input id="email" name="email" type="email" required />
+                </div>
+                <div>
+                  <Label htmlFor="whatsapp">WhatsApp *</Label>
+                  <Input id="whatsapp" name="whatsapp" type="tel" placeholder="+57 300 123 4567" required />
+                </div>
+              </div>
+              
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="consent" required /> 
+                Acepto ser contactado por WhatsApp para coordinar mi evento *
+              </label>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Procesando..." : "Enviar Cotización"}
+              </Button>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

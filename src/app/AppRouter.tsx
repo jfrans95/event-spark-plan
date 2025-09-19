@@ -9,6 +9,7 @@ import SeedAdmin from "@/pages/SeedAdmin";
 import SeedDemo from "@/pages/SeedDemo";
 import Catalog from "@/pages/Catalog";
 import Track from "@/pages/Track";
+import UserDashboard from "@/pages/UserDashboard";
 import NotFound from "@/pages/NotFound";
 
 // Role-specific layouts and pages
@@ -44,10 +45,17 @@ export const AppRouter = () => {
       {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/callback" element={<Auth />} />
       <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/catalog" element={<Catalog />} />
       <Route path="/track/:code" element={<Track />} />
+      <Route path="/tracking/:code" element={<Track />} />
+      <Route path="/user" element={
+        <PrivateRoute>
+          <UserDashboard />
+        </PrivateRoute>
+      } />
       <Route path="/seed-admin" element={<SeedAdmin />} />
       <Route path="/seed-demo" element={<SeedDemo />} />
       
