@@ -8,6 +8,7 @@ import { AppRouter } from "@/app/AppRouter";
 
 // Import test utilities for debugging
 import '@/utils/testHealthAndQuote';
+import '@/utils/testQuotePDFFlow';
 
 const queryClient = new QueryClient();
 

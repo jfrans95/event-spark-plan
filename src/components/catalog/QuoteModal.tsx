@@ -140,9 +140,8 @@ const QuoteModal = ({ open, onOpenChange }: Props) => {
         console.log("Email sent successfully with quote");
       }
 
-      // Success - ensure PDF URL is properly constructed
-      const finalPdfUrl = pdfUrl || (quoteData.pdf_path ? 
-        `https://uuioedhcwydmtoywyvtq.supabase.co/storage/v1/object/public/${quoteData.pdf_path}` : null);
+      // Success - use the PDF URL from the response directly (it's already public URL from public-assets bucket)
+      const finalPdfUrl = pdfUrl;
         
       setQuoteSuccess({
         quoteId,

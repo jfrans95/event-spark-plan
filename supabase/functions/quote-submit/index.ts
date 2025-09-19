@@ -2,7 +2,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 
-const PDF_BUCKET = 'quote-pdfs';
+const PDF_BUCKET = 'public-assets';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -188,8 +188,8 @@ Deno.serve(async (req) => {
       console.log(`Created ${quoteItems.length} quote items`);
     }
 
-    // Generate PDF and upload to quote-pdfs bucket
-    const pdfPath = `quote-${quoteId}.pdf`;
+    // Generate PDF and upload to public-assets/quotes bucket
+    const pdfPath = `quotes/quote-${quoteId}.pdf`;
     
     console.log("Generating PDF...");
     // Generate simple PDF content

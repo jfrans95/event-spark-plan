@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [selectedRole, setSelectedRole] = useState("usuario");
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -115,9 +117,9 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/user`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${selectedRole === 'provider' ? '/proveedor/registro' : '/user'}`,
           data: { 
-            role: 'usuario' 
+            role: selectedRole 
           }
         }
       });
@@ -253,17 +255,31 @@ const Auth = () => {
                     />
                   </div>
                   
-                  <div>
-                    <Label htmlFor="confirm-password">Confirmar contraseña</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirma tu contraseña"
-                      required
-                    />
-                  </div>
+                   <div>
+                     <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                     <Input
+                       id="confirm-password"
+                       type="password"
+                       value={confirmPassword}
+                       onChange={(e) => setConfirmPassword(e.target.value)}
+                       placeholder="Confirma tu contraseña"
+                       required
+                     />
+                   </div>
+
+                   <div>
+                     <Label>¿Qué tipo de cuenta deseas?</Label>
+                     <RadioGroup value={selectedRole} onValueChange={setSelectedRole} className="mt-2">
+                       <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="usuario" id="usuario" />
+                         <Label htmlFor="usuario">Usuario (cliente)</Label>
+                       </div>
+                       <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="provider" id="provider" />
+                         <Label htmlFor="provider">Proveedor</Label>
+                       </div>
+                     </RadioGroup>
+                   </div>
                   
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
