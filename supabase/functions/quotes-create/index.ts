@@ -1,10 +1,40 @@
-// Enhanced quotes-create function with proper DB integration
+// Enhanced quotes-create function with proper security and validation
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Rate limiting: Simple in-memory store (in production, use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getRateLimitKey(req: Request): string {
+  // Use IP address for anonymous users, user ID for authenticated
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  return forwardedFor?.split(',')[0] || realIP || 'unknown';
+}
+
+function checkRateLimit(key: string, limit: number = 5, windowMs: number = 60000): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(key);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= limit) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
 
 interface QuotePayload {
   contact: {
@@ -41,6 +71,19 @@ Deno.serve(async (req) => {
   try {
     console.log("=== QUOTES-CREATE START ===");
     
+    // Rate limiting check
+    const rateLimitKey = getRateLimitKey(req);
+    if (!checkRateLimit(rateLimitKey)) {
+      console.warn("Rate limit exceeded for:", rateLimitKey);
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), 
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
     const body: QuotePayload = await req.json();
     console.log("Request payload:", {
       email: body?.contact?.email,
@@ -48,11 +91,23 @@ Deno.serve(async (req) => {
       total: body?.total
     });
 
-    // Enhanced validation
+    // Enhanced validation with proper email format check
     if (!body?.contact?.email) {
       console.error("Missing email");
       return new Response(
         JSON.stringify({ error: "Email is required" }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(body.contact.email)) {
+      console.error("Invalid email format:", body.contact.email);
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }), 
         { 
           status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 

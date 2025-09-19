@@ -2,7 +2,6 @@ import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Partners from "@/pages/Partners";  
 import Logout from "@/pages/Logout";
-import AuthTest from "@/pages/AuthTest";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import SeedAdmin from "@/pages/SeedAdmin";
@@ -44,7 +43,6 @@ export const AppRouter = () => {
       {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/auth-test" element={<AuthTest />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/catalog" element={<Catalog />} />
       <Route path="/track/:code" element={<Track />} />
